@@ -1,0 +1,379 @@
+<!doctype html>
+<html lang="zh-Hant-TW">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>朱桂棠｜個人介紹</title>
+  <meta name="description" content="朱桂棠｜工業管理碩士在學｜製造現場、品質管理、製程改善、永續與淨零" />
+  <style>
+    :root{
+      --bg:#0b1020; --card:#121a33; --text:#e9ecff; --muted:#b8c0ff;
+      --line:rgba(255,255,255,.10); --brand:#7c5cff; --brand2:#21d4fd;
+      --shadow: 0 18px 45px rgba(0,0,0,.35);
+      --radius:18px;
+      --max: 1040px;
+    }
+    [data-theme="light"]{
+      --bg:#f6f7ff; --card:#ffffff; --text:#121628; --muted:#4f5b8a;
+      --line:rgba(10,18,40,.10); --shadow: 0 16px 40px rgba(10,18,40,.10);
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0; font-family: ui-sans-serif, system-ui, -apple-system, "Microsoft JhengHei", "Noto Sans TC", Arial, sans-serif;
+      background: radial-gradient(1200px 600px at 20% 0%, rgba(124,92,255,.35), transparent 55%),
+                  radial-gradient(900px 500px at 90% 10%, rgba(33,212,253,.22), transparent 55%),
+                  var(--bg);
+      color:var(--text);
+      line-height:1.7;
+    }
+    a{color:inherit}
+    .wrap{max-width:var(--max); margin:0 auto; padding:28px 18px 60px}
+    header{
+      position:sticky; top:0; z-index:50;
+      backdrop-filter: blur(14px);
+      background: color-mix(in srgb, var(--bg) 78%, transparent);
+      border-bottom:1px solid var(--line);
+    }
+    .nav{
+      max-width:var(--max); margin:0 auto; padding:12px 18px;
+      display:flex; align-items:center; gap:12px; justify-content:space-between;
+    }
+    .brand{
+      display:flex; align-items:center; gap:10px; text-decoration:none;
+    }
+    .dot{
+      width:12px; height:12px; border-radius:99px;
+      background: linear-gradient(135deg, var(--brand), var(--brand2));
+      box-shadow: 0 0 0 4px color-mix(in srgb, var(--brand) 18%, transparent);
+    }
+    .brand b{letter-spacing:.4px}
+    .navlinks{
+      display:flex; gap:14px; flex-wrap:wrap; align-items:center;
+      font-size:14px; color:var(--muted);
+    }
+    .navlinks a{opacity:.9; text-decoration:none}
+    .navlinks a:hover{opacity:1; color:var(--text)}
+    .btn{
+      border:1px solid var(--line);
+      background: color-mix(in srgb, var(--card) 72%, transparent);
+      color:var(--text);
+      padding:9px 12px; border-radius:999px;
+      cursor:pointer;
+      box-shadow: 0 6px 18px rgba(0,0,0,.12);
+      font-size:14px;
+    }
+    .btn:hover{transform: translateY(-1px)}
+    .hero{
+      margin-top:22px;
+      display:grid; grid-template-columns: 1.25fr .75fr; gap:18px;
+      align-items:stretch;
+    }
+    @media (max-width: 900px){
+      .hero{grid-template-columns: 1fr; }
+    }
+    .card{
+      background: color-mix(in srgb, var(--card) 88%, transparent);
+      border:1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding:18px;
+    }
+    .title{
+      font-size:34px; line-height:1.2; margin:0 0 10px;
+      letter-spacing:.3px;
+    }
+    .subtitle{margin:0; color:var(--muted)}
+    .chips{display:flex; flex-wrap:wrap; gap:8px; margin-top:14px}
+    .chip{
+      border:1px solid var(--line);
+      background: color-mix(in srgb, var(--card) 75%, transparent);
+      padding:6px 10px; border-radius:999px; font-size:13px;
+      color:var(--muted);
+    }
+    .grid{
+      display:grid; grid-template-columns: 1fr 1fr; gap:18px; margin-top:18px;
+    }
+    @media (max-width: 900px){ .grid{grid-template-columns:1fr;} }
+    h2{
+      margin:0 0 10px; font-size:18px; letter-spacing:.2px;
+    }
+    p{margin:0 0 10px}
+    .muted{color:var(--muted)}
+    .list{margin:0; padding-left:18px}
+    .list li{margin:8px 0}
+    .kvs{
+      display:grid; grid-template-columns: 110px 1fr; gap:8px 12px;
+      font-size:14px;
+    }
+    .kvs .k{color:var(--muted)}
+    .kvs .v{word-break:break-word}
+    .section{margin-top:18px}
+    .timeline{display:grid; gap:10px}
+    .item{
+      border:1px solid var(--line);
+      background: color-mix(in srgb, var(--card) 82%, transparent);
+      border-radius:14px;
+      padding:12px 12px;
+    }
+    .item .top{display:flex; gap:10px; align-items:center; justify-content:space-between; flex-wrap:wrap}
+    .badge{
+      font-size:12px; color:var(--muted);
+      border:1px solid var(--line);
+      padding:4px 8px; border-radius:999px;
+    }
+    .item b{font-size:14px}
+    footer{
+      margin-top:22px;
+      color:var(--muted);
+      font-size:13px;
+      text-align:center;
+    }
+    .avatar{
+      width:100%; height:100%;
+      min-height: 250px;
+      border-radius: var(--radius);
+      border:1px dashed var(--line);
+      background:
+        radial-gradient(140px 100px at 25% 30%, rgba(124,92,255,.22), transparent 60%),
+        radial-gradient(160px 120px at 75% 65%, rgba(33,212,253,.18), transparent 60%),
+        color-mix(in srgb, var(--card) 70%, transparent);
+      display:flex; align-items:center; justify-content:center;
+      text-align:center; padding:18px;
+    }
+    .avatar small{color:var(--muted)}
+    .actions{display:flex; gap:10px; flex-wrap:wrap; margin-top:12px}
+    .linkbtn{
+      text-decoration:none;
+      display:inline-flex; align-items:center; gap:8px;
+      border:1px solid var(--line);
+      background: linear-gradient(135deg,
+        color-mix(in srgb, var(--brand) 18%, transparent),
+        color-mix(in srgb, var(--brand2) 14%, transparent)
+      );
+      padding:9px 12px; border-radius:999px;
+      font-size:14px;
+    }
+    .linkbtn:hover{transform: translateY(-1px)}
+    .sep{height:1px; background:var(--line); margin:14px 0}
+    .note{
+      font-size:12px; color:var(--muted);
+      border-left: 3px solid color-mix(in srgb, var(--brand) 65%, transparent);
+      padding-left:10px;
+    }
+  </style>
+</head>
+
+<body>
+<header>
+  <div class="nav">
+    <a class="brand" href="#top" aria-label="回到頂部">
+      <span class="dot"></span>
+      <b>朱桂棠</b>
+    </a>
+    <nav class="navlinks" aria-label="導覽">
+      <a href="#about">關於我</a>
+      <a href="#strengths">特質</a>
+      <a href="#experience">學經歷</a>
+      <a href="#skills">證照</a>
+      <a href="#contact">聯絡</a>
+      <button class="btn" id="themeBtn" type="button" aria-label="切換明暗模式">切換模式</button>
+    </nav>
+  </div>
+</header>
+
+<main class="wrap" id="top">
+  <section class="hero">
+    <div class="card">
+      <h1 class="title">朱桂棠</h1>
+      <p class="subtitle">工業管理系｜碩士在學｜製造現場 × 品質管理 × 製程改善 × 永續/淨零</p>
+
+      <div class="chips" aria-label="關鍵領域">
+        <span class="chip">製程/量產理解</span>
+        <span class="chip">品質工具與問題分析</span>
+        <span class="chip">精實改善</span>
+        <span class="chip">碳盤查/能源管理概念</span>
+        <span class="chip">跨部門溝通與協作</span>
+      </div>
+
+      <div class="sep"></div>
+
+      <p class="muted">
+        研究所碩士在學，學習背景以工程與製造/工業管理領域為主。對製造現場運作、品質管理、
+        製程改善與永續議題有高度興趣，期望投入製造業，從基礎工程工作累積實務經驗，逐步建立能解決實際問題的能力。
+      </p>
+
+      <div class="actions">
+        <a class="linkbtn" href="#contact">✉️ 聯絡我</a>
+        <a class="linkbtn" href="#experience">📌 看學經歷</a>
+        <a class="linkbtn" href="#skills">🏅 看證照</a>
+      </div>
+
+      <p class="note" style="margin-top:12px;">
+        小提醒：你可以把「個人照片」放在右側區塊，或改成放作品集連結。
+      </p>
+    </div>
+
+    <div class="card">
+      <div class="avatar">
+        <div>
+          <div style="font-size:18px; font-weight:700; margin-bottom:6px;">（放你的照片/頭像）</div>
+          <small>建議放：<br/>profile.jpg<br/>並把下面的提示文字改成 &lt;img&gt; 即可</small>
+        </div>
+      </div>
+      <div class="sep"></div>
+      <div class="kvs" aria-label="快速資訊">
+        <div class="k">身份</div><div class="v">研究所碩士在學</div>
+        <div class="k">方向</div><div class="v">製程工程 / 品質 / 精實改善 / 永續</div>
+        <div class="k">語言</div><div class="v">日檢 N5</div>
+      </div>
+    </div>
+  </section>
+
+  <section class="grid">
+    <div class="card" id="about">
+      <h2>關於我</h2>
+      <p class="muted">
+        我目前為研究所碩士在學學生，主修工業管理。求學過程中，我逐漸對製造現場運作、品質管理、
+        製程改善以及永續議題產生高度興趣。希望未來投入製造產業，從實務工作中累積經驗，建立穩定、可落地的工程能力。
+      </p>
+      <p class="muted">
+        我重視「理解流程與問題本質」：先把流程看懂、把問題拆清楚，再逐步提出改善方式，並透過實際應用檢視學習成果。
+      </p>
+    </div>
+
+    <div class="card" id="strengths">
+      <h2>個人特質</h2>
+      <ul class="list muted">
+        <li><b>做事踏實、重視理解：</b>面對不熟悉領域，會先理解流程與問題本質，再逐步嘗試改善。</li>
+        <li><b>願意從實務中學習：</b>相信工程能力建立在現場經驗上，願意進入現場觀察與請教。</li>
+        <li><b>重視團隊合作：</b>能配合團隊共同完成任務，與學長姐、學弟妹合作專案。</li>
+        <li><b>持續學習態度：</b>對製程、品質與永續議題保持學習動機，主動補強不足。</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="grid">
+    <div class="card" id="experience">
+      <h2>學經歷</h2>
+      <div class="timeline">
+        <div class="item">
+          <div class="top">
+            <b>國立屏東科技大學｜工業管理系（碩士）</b>
+            <span class="badge">民國 113/07 ～ 115/07</span>
+          </div>
+          <div class="muted">延續工廠訪視的觀察，參與精實改善專案，學習從現場釐清瓶頸、資訊不透明與人工作業誤差，並以資料整理/分析協助討論改善方向。</div>
+        </div>
+
+        <div class="item">
+          <div class="top">
+            <b>國立屏東科技大學｜工業管理系（學士）</b>
+            <span class="badge">民國 109/07 ～ 113/06</span>
+          </div>
+          <div class="muted">
+            為驗證自己對品質工具與品管流程理解，主動準備並報考品質技術師（CQT），建立「學了要能用」的自我要求。
+          </div>
+        </div>
+
+        <div class="item">
+          <div class="top">
+            <b>宏全國際股份有限公司｜實習</b>
+            <span class="badge">民國 112/07 ～ 112/08</span>
+          </div>
+          <div class="muted">接觸製造情境與實務運作，累積現場觀察與理解量產環境的基礎經驗。</div>
+        </div>
+
+        <div class="item">
+          <div class="top">
+            <b>工廠訪視與碳排放紀錄相關工作</b>
+            <span class="badge">大四下（期間依實際為準）</span>
+          </div>
+          <div class="muted">
+            進入製造現場了解製程流程、設備運作與碳排來源，體會永續/減碳與製程設計、管理方式及改善策略密切相關。
+          </div>
+        </div>
+
+        <div class="item">
+          <div class="top">
+            <b>永續綠能整合管理人才養成班（158 小時）</b>
+            <span class="badge">受訓</span>
+          </div>
+          <div class="muted">
+            強化碳排盤查、能源管理與淨零架構理解，並透過證照檢核學習成果。
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>未來方向</h2>
+      <p class="muted">
+        期望在製程工程相關領域持續學習與發展，從基礎工程工作做起，逐步熟悉製程、設備與量產環境，
+        並在「製程穩定度、品質與效率提升」上發揮所學，成為能穩定支援團隊運作的工程人員。
+      </p>
+
+      <div class="sep"></div>
+
+      <h2 id="skills">證照與能力</h2>
+      <div class="timeline">
+        <div class="item"><div class="top"><b>品質技術師（CQT）</b><span class="badge">中華民國品質學會</span></div></div>
+        <div class="item"><div class="top"><b>持續改善工程師</b><span class="badge">已取得</span></div></div>
+        <div class="item"><div class="top"><b>淨零碳規劃管理師（初級）</b><span class="badge">已取得</span></div></div>
+        <div class="item"><div class="top"><b>經濟部智慧製造工程師（初級）</b><span class="badge">已取得</span></div></div>
+        <div class="item"><div class="top"><b>Autodesk Certified User：AutoCAD</b><span class="badge">已取得</span></div></div>
+        <div class="item"><div class="top"><b>Autodesk Certified User：Inventor</b><span class="badge">已取得</span></div></div>
+        <div class="item"><div class="top"><b>日語能力檢定 N5</b><span class="badge">已取得</span></div></div>
+      </div>
+
+      <p class="note" style="margin-top:12px;">
+        你也可以在這裡補上：熟悉的品質工具（QC七大手法/SPC等）、Excel/Power BI、或你做過的專案成果連結。
+      </p>
+    </div>
+  </section>
+
+  <section class="card section" id="contact">
+    <h2>聯絡方式</h2>
+    <div class="kvs" style="margin-top:10px">
+      <div class="k">手機</div><div class="v"><a href="tel:+886966704586">0966-704-586</a></div>
+      <div class="k">Email</div><div class="v"><a href="mailto:fakeromg777@gmail.com">fakeromg777@gmail.com</a></div>
+      <div class="k">地址</div><div class="v">宜蘭縣嵐峰路三段448巷10號</div>
+    </div>
+    <div class="sep"></div>
+    <p class="muted" style="margin:0">
+      若你希望我把此頁改成「投遞用版本」：我可以幫你把手機/地址隱藏、加入作品集區塊、以及把內容改成更像工程師履歷網站的版型。
+    </p>
+  </section>
+
+  <footer>
+    © <span id="year"></span> 朱桂棠｜Personal Profile
+  </footer>
+</main>
+
+<script>
+  // 年份
+  document.getElementById("year").textContent = new Date().getFullYear();
+
+  // 明暗模式：預設跟隨系統，並記錄到 localStorage
+  const root = document.documentElement;
+  const key = "theme_pref";
+  const saved = localStorage.getItem(key);
+
+  function setTheme(t){
+    if(t === "light" || t === "dark"){
+      root.setAttribute("data-theme", t);
+      localStorage.setItem(key, t);
+    }else{
+      root.removeAttribute("data-theme");
+      localStorage.removeItem(key);
+    }
+  }
+
+  if(saved) setTheme(saved);
+
+  document.getElementById("themeBtn").addEventListener("click", () => {
+    const cur = root.getAttribute("data-theme");
+    if(cur === "light") setTheme("dark");
+    else setTheme("light");
+  });
+</script>
+</body>
+</html>
