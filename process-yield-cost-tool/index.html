@@ -1,0 +1,370 @@
+<!doctype html>
+<html lang="zh-Hant-TW">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>製程良率與不良成本分析工具</title>
+  <style>
+    :root {
+      --bg: #f4f6f3;
+      --panel: #ffffff;
+      --text: #17211d;
+      --muted: #64736c;
+      --line: #d8e2dc;
+      --accent: #17745a;
+      --blue: #215f9a;
+      --warn: #a96008;
+      --bad: #b42318;
+      --shadow: 0 18px 44px rgba(30, 48, 40, .11);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      color: var(--text);
+      font-family: "Microsoft JhengHei", "Noto Sans TC", system-ui, sans-serif;
+      background:
+        linear-gradient(135deg, rgba(23,116,90,.13), transparent 34%),
+        linear-gradient(315deg, rgba(33,95,154,.12), transparent 32%),
+        var(--bg);
+    }
+
+    main {
+      width: min(1160px, calc(100% - 32px));
+      margin: 0 auto;
+      padding: 28px 0 40px;
+    }
+
+    header {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 16px;
+      align-items: end;
+      margin-bottom: 18px;
+    }
+
+    h1 {
+      margin: 0 0 8px;
+      font-size: clamp(27px, 5vw, 43px);
+      line-height: 1.16;
+    }
+
+    p {
+      margin: 0;
+      color: var(--muted);
+      line-height: 1.7;
+    }
+
+    .tag {
+      min-height: 38px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 8px 12px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: rgba(255,255,255,.72);
+      color: var(--blue);
+      font-weight: 800;
+      white-space: nowrap;
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: minmax(0, 1.04fr) minmax(340px, .96fr);
+      gap: 16px;
+      align-items: start;
+    }
+
+    .panel {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      box-shadow: var(--shadow);
+    }
+
+    .panel h2 {
+      margin: 0;
+      padding: 16px 18px 0;
+      font-size: 20px;
+    }
+
+    .inputs {
+      padding: 16px 18px 18px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    label {
+      display: grid;
+      gap: 6px;
+      font-weight: 800;
+    }
+
+    .hint {
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 400;
+    }
+
+    input {
+      width: 100%;
+      min-height: 43px;
+      border: 1px solid #cbd8d1;
+      border-radius: 8px;
+      padding: 8px 10px;
+      color: var(--text);
+      font: inherit;
+      background: #fff;
+    }
+
+    input:focus {
+      outline: 3px solid rgba(23,116,90,.18);
+      border-color: var(--accent);
+    }
+
+    .buttons {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      padding: 0 18px 18px;
+    }
+
+    button {
+      min-height: 42px;
+      border: 1px solid transparent;
+      border-radius: 8px;
+      padding: 9px 14px;
+      font: inherit;
+      font-weight: 800;
+      cursor: pointer;
+    }
+
+    .primary { color: #fff; background: var(--accent); }
+
+    .secondary {
+      color: var(--blue);
+      background: #eef5fb;
+      border-color: #caddeb;
+    }
+
+    .results {
+      padding: 18px;
+      display: grid;
+      gap: 12px;
+    }
+
+    .metric-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    .metric {
+      padding: 14px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #fbfdfc;
+    }
+
+    .metric span {
+      display: block;
+      color: var(--muted);
+      font-size: 13px;
+      margin-bottom: 5px;
+    }
+
+    .metric strong {
+      font-size: 28px;
+      line-height: 1.1;
+    }
+
+    .metric.good strong { color: var(--accent); }
+    .metric.warn strong { color: var(--warn); }
+    .metric.bad strong { color: var(--bad); }
+
+    .advice {
+      padding: 14px;
+      border-radius: 8px;
+      border: 1px solid #c9ded4;
+      background: #edf8f3;
+      line-height: 1.7;
+    }
+
+    .formula {
+      padding: 14px;
+      border-radius: 8px;
+      background: #f7f8fa;
+      border: 1px solid var(--line);
+      color: var(--muted);
+      line-height: 1.7;
+    }
+
+    footer {
+      margin-top: 18px;
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.7;
+    }
+
+    @media (max-width: 860px) {
+      header, .layout, .inputs, .metric-grid { grid-template-columns: 1fr; }
+      .tag { justify-self: start; }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <header>
+      <div>
+        <h1>製程良率與不良成本分析工具</h1>
+        <p>輸入生產數量、良品、不良品與成本資料，快速估算良率、不良率、品質損失，以及距離目標良率還差多少。</p>
+      </div>
+      <div class="tag">品質管理作品</div>
+    </header>
+
+    <section class="layout">
+      <div class="panel">
+        <h2>製程資料輸入</h2>
+        <div class="inputs">
+          <label>生產總數<span class="hint">本批次投入或完成數量</span><input id="totalQty" type="number" min="0" step="1" value="1000"></label>
+          <label>良品數量<span class="hint">符合品質要求的數量</span><input id="goodQty" type="number" min="0" step="1" value="940"></label>
+          <label>不良品數量<span class="hint">可手動填寫，或按下自動帶入</span><input id="defectQty" type="number" min="0" step="1" value="60"></label>
+          <label>目標良率 %<span class="hint">例如 98 代表目標良率 98%</span><input id="targetYield" type="number" min="0" max="100" step="0.1" value="98"></label>
+          <label>單件製造成本<span class="hint">每件產品的材料/加工成本</span><input id="unitCost" type="number" min="0" step="0.1" value="120"></label>
+          <label>單件重工成本<span class="hint">每件不良品若重工需增加的成本</span><input id="reworkCost" type="number" min="0" step="0.1" value="35"></label>
+        </div>
+
+        <div class="buttons">
+          <button class="primary" type="button" id="calculateBtn">分析製程</button>
+          <button class="secondary" type="button" id="autoDefectBtn">自動帶入不良數</button>
+          <button class="secondary" type="button" id="sampleBtn">套用範例</button>
+          <button class="secondary" type="button" id="resetBtn">清除</button>
+        </div>
+      </div>
+
+      <aside class="panel results" aria-live="polite">
+        <div class="metric-grid">
+          <div class="metric good"><span>實際良率</span><strong id="yieldRate">0%</strong></div>
+          <div class="metric warn"><span>不良率</span><strong id="defectRate">0%</strong></div>
+          <div class="metric bad"><span>品質損失成本</span><strong id="lossCost">$0</strong></div>
+          <div class="metric"><span>距離目標差距</span><strong id="gapRate">0%</strong></div>
+        </div>
+
+        <div class="advice" id="adviceText">請輸入資料後進行分析。</div>
+        <div class="formula" id="formulaText">公式：良率 = 良品數量 ÷ 生產總數 × 100%；不良成本 = 不良品數量 × (單件製造成本 + 單件重工成本)。</div>
+      </aside>
+    </section>
+
+    <footer>作品理念：把工業管理與品質管理常用的良率、不良率、品質損失成本整理成簡單網頁工具，協助製造現場快速判斷改善重點。</footer>
+  </main>
+
+  <script>
+    const fields = {
+      totalQty: document.querySelector("#totalQty"),
+      goodQty: document.querySelector("#goodQty"),
+      defectQty: document.querySelector("#defectQty"),
+      targetYield: document.querySelector("#targetYield"),
+      unitCost: document.querySelector("#unitCost"),
+      reworkCost: document.querySelector("#reworkCost")
+    };
+
+    const output = {
+      yieldRate: document.querySelector("#yieldRate"),
+      defectRate: document.querySelector("#defectRate"),
+      lossCost: document.querySelector("#lossCost"),
+      gapRate: document.querySelector("#gapRate"),
+      adviceText: document.querySelector("#adviceText"),
+      formulaText: document.querySelector("#formulaText")
+    };
+
+    function valueOf(name) {
+      const value = Number(fields[name].value);
+      return Number.isFinite(value) && value >= 0 ? value : 0;
+    }
+
+    function money(value) {
+      return "$" + Math.round(value).toLocaleString("zh-TW");
+    }
+
+    function percent(value) {
+      return value.toFixed(2) + "%";
+    }
+
+    function calculate() {
+      const total = valueOf("totalQty");
+      const good = valueOf("goodQty");
+      const defect = valueOf("defectQty");
+      const target = valueOf("targetYield");
+      const unitCost = valueOf("unitCost");
+      const reworkCost = valueOf("reworkCost");
+
+      if (total <= 0) {
+        output.yieldRate.textContent = "0%";
+        output.defectRate.textContent = "0%";
+        output.lossCost.textContent = "$0";
+        output.gapRate.textContent = "0%";
+        output.adviceText.textContent = "生產總數必須大於 0，才能分析良率與成本。";
+        return;
+      }
+
+      const yieldRate = good / total * 100;
+      const defectRate = defect / total * 100;
+      const lossCost = defect * (unitCost + reworkCost);
+      const gap = target - yieldRate;
+
+      output.yieldRate.textContent = percent(yieldRate);
+      output.defectRate.textContent = percent(defectRate);
+      output.lossCost.textContent = money(lossCost);
+      output.gapRate.textContent = gap > 0 ? "差 " + percent(gap) : "達標";
+
+      if (yieldRate >= target) {
+        output.adviceText.textContent = "目前良率已達目標。建議持續追蹤關鍵不良原因，維持製程穩定度。";
+      } else if (gap <= 3) {
+        output.adviceText.textContent = "良率接近目標。建議優先檢查前兩大不良項目，針對重複發生原因做改善。";
+      } else {
+        output.adviceText.textContent = "良率明顯低於目標。建議先用柏拉圖整理不良原因，再從人、機、料、法、環進行原因分析。";
+      }
+
+      output.formulaText.textContent =
+        `良率 ${good} ÷ ${total} × 100% = ${percent(yieldRate)}；` +
+        `不良率 ${defect} ÷ ${total} × 100% = ${percent(defectRate)}；` +
+        `品質損失 ${defect} × (${unitCost} + ${reworkCost}) = ${money(lossCost)}。`;
+    }
+
+    function autoDefect() {
+      const total = valueOf("totalQty");
+      const good = valueOf("goodQty");
+      fields.defectQty.value = Math.max(0, total - good);
+      calculate();
+    }
+
+    function sample() {
+      fields.totalQty.value = 1000;
+      fields.goodQty.value = 940;
+      fields.defectQty.value = 60;
+      fields.targetYield.value = 98;
+      fields.unitCost.value = 120;
+      fields.reworkCost.value = 35;
+      calculate();
+    }
+
+    function reset() {
+      for (const field of Object.values(fields)) {
+        field.value = "";
+      }
+      calculate();
+    }
+
+    document.querySelector("#calculateBtn").addEventListener("click", calculate);
+    document.querySelector("#autoDefectBtn").addEventListener("click", autoDefect);
+    document.querySelector("#sampleBtn").addEventListener("click", sample);
+    document.querySelector("#resetBtn").addEventListener("click", reset);
+    document.querySelector(".inputs").addEventListener("input", calculate);
+    calculate();
+  </script>
+</body>
+</html>
