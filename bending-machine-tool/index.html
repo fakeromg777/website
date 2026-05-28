@@ -253,11 +253,6 @@
       padding-bottom: 18px;
     }
 
-    .steps table {
-      width: calc(100% - 36px);
-      margin: 14px 18px 0;
-    }
-
     .tool-panels {
       display: grid;
       grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -281,10 +276,14 @@
     }
 
     .step-card svg {
-      min-height: 220px;
+      min-height: 300px;
       border: 0;
       border-radius: 0;
       background: #fff;
+    }
+
+    .hidden-steps {
+      display: none;
     }
 
     .ok { color: var(--accent-2); font-weight: 800; }
@@ -368,8 +367,8 @@
 
     <section class="steps">
       <div class="panel">
-        <h2>折彎步驟</h2>
-        <table>
+        <h2>折彎步驟與刀具圖</h2>
+        <table class="hidden-steps">
           <thead>
             <tr>
               <th>折次</th>
@@ -505,38 +504,40 @@
 
     function makeToolStepSvg(stepNo, angle, leftLen, rightLen, shortEdge, cls) {
       const centerX = 210;
-      const bendY = 118;
-      const scale = Math.min(2.2, 130 / Math.max(leftLen, rightLen, 1));
-      const leftX = centerX - Math.max(34, leftLen * scale);
+      const bendY = 154;
+      const scale = Math.min(2.1, 118 / Math.max(leftLen, rightLen, 1));
+      const leftX = centerX - Math.max(78, leftLen * scale);
+      const partLen = Math.max(78, rightLen * scale);
       const rightRad = -angle * Math.PI / 180;
-      const rightX = centerX + Math.max(34, rightLen * scale) * Math.cos(rightRad);
-      const rightY = bendY + Math.max(34, rightLen * scale) * Math.sin(rightRad);
+      const rightX = centerX + partLen * Math.cos(rightRad);
+      const rightY = bendY + partLen * Math.sin(rightRad);
       const color = cls === "bad" ? "#b42318" : cls === "warn" ? "#a35d00" : "#176b87";
       const resultText = cls === "bad" ? "短邊不足" : cls === "warn" ? "需確認模具" : "可製作";
+      const arcSweep = angle < 0 ? 1 : 0;
 
       return `
-        <svg viewBox="0 0 420 220" role="img" aria-label="第 ${stepNo} 折刀具示意圖">
+        <svg viewBox="0 0 420 300" role="img" aria-label="第 ${stepNo} 折刀具示意圖">
           <defs>
             <marker id="arrow-${stepNo}" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
               <path d="M0,0 L6,3 L0,6 Z" fill="#64717a"></path>
             </marker>
           </defs>
-          <text x="16" y="26" font-size="14" font-weight="800" fill="#172026">第 ${stepNo} 折：${angle}°</text>
-          <text x="16" y="48" font-size="12" fill="#64717a">短邊 ${shortEdge} mm｜${resultText}</text>
+          <text x="16" y="30" font-size="18" font-weight="900" fill="#172026">第 ${stepNo} 折：${angle}°</text>
+          <text x="16" y="58" font-size="14" fill="#64717a">短邊 ${shortEdge} mm｜${resultText}</text>
 
-          <path d="M${centerX - 26},18 L${centerX},90 L${centerX + 26},18" fill="none" stroke="#475569" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"></path>
-          <text x="${centerX + 34}" y="42" font-size="12" fill="#64717a">上刀</text>
-          <line x1="${centerX}" y1="84" x2="${centerX}" y2="${bendY - 8}" stroke="#64717a" stroke-width="2" stroke-dasharray="5 4" marker-end="url(#arrow-${stepNo})"></line>
+          <path d="M${centerX - 38},28 L${centerX},128 L${centerX + 38},28" fill="none" stroke="#475569" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"></path>
+          <text x="${centerX + 52}" y="68" font-size="15" fill="#64717a">上刀</text>
+          <line x1="${centerX}" y1="70" x2="${centerX}" y2="${bendY - 28}" stroke="#64717a" stroke-width="3" stroke-dasharray="6 5" marker-end="url(#arrow-${stepNo})"></line>
 
-          <path d="M${centerX - 58},188 L${centerX},130 L${centerX + 58},188" fill="none" stroke="#334155" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"></path>
-          <text x="${centerX + 66}" y="178" font-size="12" fill="#64717a">V 模</text>
+          <path d="M${centerX - 84},260 L${centerX},176 L${centerX + 84},260" fill="none" stroke="#334155" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"></path>
+          <text x="${centerX + 96}" y="250" font-size="15" fill="#64717a">V 模</text>
 
-          <line x1="${leftX}" y1="${bendY}" x2="${centerX}" y2="${bendY}" stroke="${color}" stroke-width="8" stroke-linecap="round"></line>
-          <line x1="${centerX}" y1="${bendY}" x2="${rightX}" y2="${rightY}" stroke="${color}" stroke-width="8" stroke-linecap="round"></line>
-          <circle cx="${centerX}" cy="${bendY}" r="7" fill="#fff" stroke="${color}" stroke-width="4"></circle>
-          <text x="${(leftX + centerX) / 2}" y="${bendY - 14}" text-anchor="middle" font-size="12" font-weight="800" fill="#172026">${leftLen}mm</text>
-          <text x="${(rightX + centerX) / 2}" y="${(rightY + bendY) / 2 - 14}" text-anchor="middle" font-size="12" font-weight="800" fill="#172026">${rightLen}mm</text>
-          <path d="M${centerX + 28},${bendY} A28,28 0 0 ${angle < 0 ? 1 : 0} ${centerX + 28 * Math.cos(rightRad)},${bendY + 28 * Math.sin(rightRad)}" fill="none" stroke="#64717a" stroke-width="2"></path>
+          <line x1="${leftX}" y1="${bendY}" x2="${centerX}" y2="${bendY}" stroke="${color}" stroke-width="10" stroke-linecap="round"></line>
+          <line x1="${centerX}" y1="${bendY}" x2="${rightX}" y2="${rightY}" stroke="${color}" stroke-width="10" stroke-linecap="round"></line>
+          <circle cx="${centerX}" cy="${bendY}" r="10" fill="#fff" stroke="${color}" stroke-width="5"></circle>
+          <text x="${(leftX + centerX) / 2}" y="${bendY - 18}" text-anchor="middle" font-size="15" font-weight="900" fill="#172026">${leftLen}mm</text>
+          <text x="${(rightX + centerX) / 2}" y="${(rightY + bendY) / 2 - 18}" text-anchor="middle" font-size="15" font-weight="900" fill="#172026">${rightLen}mm</text>
+          <path d="M${centerX + 38},${bendY} A38,38 0 0 ${arcSweep} ${centerX + 38 * Math.cos(rightRad)},${bendY + 38 * Math.sin(rightRad)}" fill="none" stroke="#64717a" stroke-width="3"></path>
         </svg>
       `;
     }
