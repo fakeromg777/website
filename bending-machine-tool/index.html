@@ -353,23 +353,59 @@
         .filter(seg => seg.length > 0);
     }
 
-    function pointsFor(segments, folded) {
+    function absoluteAnglesFor(segments, folded) {
       let angle = 0;
-      let x = 0;
-      let y = 0;
-      const points = [{ x, y }];
-
+      const angles = [];
       segments.forEach((seg, index) => {
         if (index > 0 && folded.has(index)) {
           angle = normalize(angle + seg.angle);
         }
-        const rad = angle * Math.PI / 180;
+        angles.push(angle);
+      });
+      return angles;
+    }
+
+    function pointsFor(segments, folded) {
+      let x = 0;
+      let y = 0;
+      const points = [{ x, y }];
+      const angles = absoluteAnglesFor(segments, folded);
+
+      segments.forEach((seg, index) => {
+        const rad = angles[index] * Math.PI / 180;
         x += seg.length * Math.cos(rad);
         y += seg.length * Math.sin(rad);
         points.push({ x, y });
       });
 
       return points;
+    }
+
+    function toolAngleByCurrentSegment(currAng, bendAngle) {
+      const prevAng = normalize(currAng - bendAngle);
+      const prevOutAng = normalize(prevAng + 180);
+      const nextOutAng = normalize(currAng);
+      const r1 = prevOutAng * Math.PI / 180;
+      const r2 = nextOutAng * Math.PI / 180;
+      const vx = Math.cos(r1) + Math.cos(r2);
+      const vy = Math.sin(r1) + Math.sin(r2);
+      if (Math.abs(vx) < 0.000001 && Math.abs(vy) < 0.000001) {
+        return normalize(prevAng + 90);
+      }
+      return normalize(Math.atan2(vy, vx) * 180 / Math.PI);
+    }
+
+    function rotatePoint(x, y, angleDeg) {
+      const rad = angleDeg * Math.PI / 180;
+      return {
+        x: x * Math.cos(rad) - y * Math.sin(rad),
+        y: x * Math.sin(rad) + y * Math.cos(rad)
+      };
+    }
+
+    function transformPlateToFixedTool(points, bendPoint, toolAngle) {
+      const rotateAngle = normalize(270 - toolAngle);
+      return points.map(point => rotatePoint(point.x - bendPoint.x, point.y - bendPoint.y, rotateAngle));
     }
 
     function fit(points, width, height, margin, anchorIndex = null, anchorX = null, anchorY = null) {
@@ -408,20 +444,51 @@
       return y >= top && y <= bottom;
     }
 
+    function fitMachine(points, width, height, bendX, bendY, minToolHeight = 84) {
+      let minX = Math.min(...points.map(p => p.x));
+      let maxX = Math.max(...points.map(p => p.x));
+      let minY = Math.min(...points.map(p => p.y));
+      let maxY = Math.max(...points.map(p => p.y));
+      const margin = 18;
+      minY = Math.min(minY, -minToolHeight);
+
+      const maxLeft = Math.abs(Math.min(0, minX));
+      const maxRight = Math.abs(Math.max(0, maxX));
+      const maxUp = Math.abs(Math.min(0, minY));
+      const maxDown = Math.abs(Math.max(0, maxY));
+      const scales = [];
+      if (maxLeft > 0) scales.push((bendX - margin) / maxLeft);
+      if (maxRight > 0) scales.push((width - margin - bendX) / maxRight);
+      if (maxUp > 0) scales.push((bendY - margin - 38) / maxUp);
+      if (maxDown > 0) scales.push((height - margin - bendY) / maxDown);
+      const scale = Math.max(0.1, Math.min(...scales.filter(value => Number.isFinite(value) && value > 0)));
+
+      return points.map(point => ({
+        x: bendX + point.x * scale,
+        y: bendY + point.y * scale
+      }));
+    }
+
     function cardSvg(step, bendIndex, segments, folded, shortEdge, minEdge) {
       const width = 520;
-      const height = 330;
-      const toolX = 330;
-      const bendY = 220;
+      const height = 300;
+      const toolX = 260;
+      const bendY = 210;
       const toolTop = 46;
       const toolBottom = bendY - 6;
+      const absAngles = absoluteAnglesFor(segments, folded);
       const raw = pointsFor(segments, folded);
-      const pts = fit(raw, width, height, 42, bendIndex, toolX, bendY);
+      const bendPoint = raw[bendIndex];
+      const toolAngle = toolAngleByCurrentSegment(absAngles[bendIndex], segments[bendIndex].angle);
+      const machine = transformPlateToFixedTool(raw, bendPoint, toolAngle);
+      const pts = fitMachine(machine, width, height, toolX, bendY);
       const hit = pts.some((p, i) => {
-        if (i === 0 || i === bendIndex || i === bendIndex + 1) return false;
+        if (i === 0) return false;
+        if (i - 1 === bendIndex || i - 1 === bendIndex - 1) return false;
         return segmentHitsTool(pts[i - 1], p, toolX, toolTop, toolBottom);
       });
       const ok = !hit && shortEdge >= minEdge;
+      const toolCode = shortEdge < 12 ? "D01" : "D02";
       const labels = segments.map((seg, i) => {
         const a = pts[i];
         const b = pts[i + 1];
@@ -435,7 +502,7 @@
       return `
         <svg viewBox="0 0 ${width} ${height}">
           <rect x="0" y="0" width="${width}" height="${height}" fill="#fff"></rect>
-          <text x="18" y="32" font-size="18" font-weight="900">步驟 ${step}：第${step}折　彎刀 / D02</text>
+          <text x="18" y="32" font-size="18" font-weight="900">步驟 ${step}：第${step}折　直刀 / ${toolCode}</text>
           <text x="18" y="66" font-size="15" fill="#647280">短邊 ${shortEdge} mm｜<tspan class="${ok ? "ok" : "bad"}">${ok ? "不卡刀" : "卡刀或短邊不足"}</tspan></text>
           <text x="${toolX + 16}" y="60" font-size="14" font-weight="900" fill="var(--knife)">T100${step}</text>
           <line x1="${toolX}" y1="${toolTop}" x2="${toolX}" y2="${toolBottom}" stroke="var(--knife)" stroke-width="2" stroke-dasharray="8 6"></line>
