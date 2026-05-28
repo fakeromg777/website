@@ -310,7 +310,7 @@
     <header>
       <div>
         <h1>折彎機圖形與步驟產生器</h1>
-        <p>左邊輸入每段長度與折角，右邊即時產生折彎形狀，下方列出折彎順序、左右邊長、短邊與風險提示。</p>
+        <p>左邊輸入每段長度與折角，右邊即時產生折彎形狀，下方用刀具線顯示每一步折彎結果與是否卡刀。</p>
       </div>
       <div class="tag">Excel VBA 轉網頁作品</div>
     </header>
@@ -376,7 +376,7 @@
               <th>左邊長</th>
               <th>右邊長</th>
               <th>短邊</th>
-              <th>建議</th>
+              <th>刀具</th>
               <th>結果</th>
             </tr>
           </thead>
@@ -502,44 +502,64 @@
       return ["低", "ok"];
     }
 
-    function makeToolStepSvg(stepNo, angle, leftLen, rightLen, shortEdge, cls) {
-      const centerX = 210;
-      const bendY = 154;
-      const scale = Math.min(2.1, 118 / Math.max(leftLen, rightLen, 1));
-      const leftX = centerX - Math.max(78, leftLen * scale);
-      const partLen = Math.max(78, rightLen * scale);
-      const rightRad = -angle * Math.PI / 180;
-      const rightX = centerX + partLen * Math.cos(rightRad);
-      const rightY = bendY + partLen * Math.sin(rightRad);
-      const color = cls === "bad" ? "#b42318" : cls === "warn" ? "#a35d00" : "#176b87";
-      const resultText = cls === "bad" ? "短邊不足" : cls === "warn" ? "需確認模具" : "可製作";
-      const arcSweep = angle < 0 ? 1 : 0;
+    function makeToolStepSvg(stepNo, angle, leftLen, rightLen, shortEdge, cls, toolCode) {
+      const centerX = 300;
+      const bendY = 210;
+      const scale = Math.min(2.3, 145 / Math.max(leftLen, rightLen, 1));
+      const leftLength = Math.max(55, leftLen * scale);
+      const rightLength = Math.max(55, rightLen * scale);
+      const prevRad = angle > 0 ? -135 * Math.PI / 180 : 180 * Math.PI / 180;
+      const nextRad = angle > 0 ? 180 * Math.PI / 180 : -45 * Math.PI / 180;
+      const leftX = centerX + leftLength * Math.cos(prevRad);
+      const leftY = bendY + leftLength * Math.sin(prevRad);
+      const rightX = centerX + rightLength * Math.cos(nextRad);
+      const rightY = bendY + rightLength * Math.sin(nextRad);
+      const midX = (leftX + centerX) / 2;
+      const midY = (leftY + bendY) / 2;
+      const rightMidX = (rightX + centerX) / 2;
+      const rightMidY = (rightY + bendY) / 2;
+      const toolX = centerX;
+      const toolTop = 42;
+      const toolBottom = bendY - 4;
+      const leftHit = segmentNearVerticalTool(leftX, leftY, centerX, bendY, toolX, toolTop, toolBottom);
+      const rightHit = segmentNearVerticalTool(centerX, bendY, rightX, rightY, toolX, toolTop, toolBottom);
+      const hit = leftHit || rightHit;
+      const resultText = hit ? "卡刀" : cls === "bad" ? "短邊不足" : "不卡刀";
+      const resultClass = hit ? "bad" : cls;
+      const hitDot = hit ? `<circle cx="${toolX}" cy="${bendY - 42}" r="8" fill="#b42318"></circle><text x="${toolX + 12}" y="${bendY - 38}" font-size="13" font-weight="900" fill="#b42318">卡刀</text>` : "";
 
       return `
         <svg viewBox="0 0 420 300" role="img" aria-label="第 ${stepNo} 折刀具示意圖">
-          <defs>
-            <marker id="arrow-${stepNo}" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
-              <path d="M0,0 L6,3 L0,6 Z" fill="#64717a"></path>
-            </marker>
-          </defs>
-          <text x="16" y="30" font-size="18" font-weight="900" fill="#172026">第 ${stepNo} 折：${angle}°</text>
-          <text x="16" y="58" font-size="14" fill="#64717a">短邊 ${shortEdge} mm｜${resultText}</text>
+          <rect x="1" y="1" width="418" height="298" fill="#ffffff"></rect>
+          <text x="16" y="30" font-size="15" font-weight="900" fill="#172026">步驟 ${stepNo}：第${stepNo}折　彎刀 / ${toolCode}</text>
+          <text x="${toolX + 14}" y="52" font-size="12" font-weight="900" fill="#d00000">T100${stepNo}</text>
+          <line x1="${toolX}" y1="${toolTop}" x2="${toolX}" y2="${toolBottom}" stroke="#d00000" stroke-width="2" stroke-dasharray="7 6"></line>
 
-          <path d="M${centerX - 38},28 L${centerX},128 L${centerX + 38},28" fill="none" stroke="#475569" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"></path>
-          <text x="${centerX + 52}" y="68" font-size="15" fill="#64717a">上刀</text>
-          <line x1="${centerX}" y1="70" x2="${centerX}" y2="${bendY - 28}" stroke="#64717a" stroke-width="3" stroke-dasharray="6 5" marker-end="url(#arrow-${stepNo})"></line>
+          <polyline points="${leftX},${leftY} ${centerX},${bendY} ${rightX},${rightY}" fill="none" stroke="#2f6fd6" stroke-width="3"></polyline>
+          <circle cx="${leftX}" cy="${leftY}" r="5" fill="#f00018"></circle>
+          <circle cx="${midX}" cy="${midY}" r="5" fill="#f00018"></circle>
+          <circle cx="${centerX}" cy="${bendY}" r="6" fill="#ffb000" stroke="#f00018" stroke-width="2"></circle>
+          <circle cx="${rightMidX}" cy="${rightMidY}" r="5" fill="#f00018"></circle>
+          <circle cx="${rightX}" cy="${rightY}" r="5" fill="#f00018"></circle>
+          ${hitDot}
 
-          <path d="M${centerX - 84},260 L${centerX},176 L${centerX + 84},260" fill="none" stroke="#334155" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"></path>
-          <text x="${centerX + 96}" y="250" font-size="15" fill="#64717a">V 模</text>
-
-          <line x1="${leftX}" y1="${bendY}" x2="${centerX}" y2="${bendY}" stroke="${color}" stroke-width="10" stroke-linecap="round"></line>
-          <line x1="${centerX}" y1="${bendY}" x2="${rightX}" y2="${rightY}" stroke="${color}" stroke-width="10" stroke-linecap="round"></line>
-          <circle cx="${centerX}" cy="${bendY}" r="10" fill="#fff" stroke="${color}" stroke-width="5"></circle>
-          <text x="${(leftX + centerX) / 2}" y="${bendY - 18}" text-anchor="middle" font-size="15" font-weight="900" fill="#172026">${leftLen}mm</text>
-          <text x="${(rightX + centerX) / 2}" y="${(rightY + bendY) / 2 - 18}" text-anchor="middle" font-size="15" font-weight="900" fill="#172026">${rightLen}mm</text>
-          <path d="M${centerX + 38},${bendY} A38,38 0 0 ${arcSweep} ${centerX + 38 * Math.cos(rightRad)},${bendY + 38 * Math.sin(rightRad)}" fill="none" stroke="#64717a" stroke-width="3"></path>
+          <text x="${midX - 20}" y="${midY - 10}" font-size="12" font-weight="800" fill="#172026">${leftLen}</text>
+          <text x="${rightMidX + 8}" y="${rightMidY - 8}" font-size="12" font-weight="800" fill="#172026">${rightLen}</text>
+          <text x="${centerX + 10}" y="${bendY - 6}" font-size="12" font-weight="800" fill="#172026">${shortEdge}</text>
+          <text x="16" y="64" font-size="13" fill="#64717a">短邊 ${shortEdge} mm｜<tspan class="${resultClass}">${resultText}</tspan></text>
         </svg>
       `;
+    }
+
+    function segmentNearVerticalTool(x1, y1, x2, y2, toolX, toolTop, toolBottom) {
+      if (Math.abs(x2 - x1) < 0.001) {
+        if (Math.abs(x1 - toolX) > 9) return false;
+        return Math.max(Math.min(y1, y2), toolTop) <= Math.min(Math.max(y1, y2), toolBottom) - 12;
+      }
+      const t = (toolX - x1) / (x2 - x1);
+      if (t <= 0.04 || t >= 0.96) return false;
+      const y = y1 + (y2 - y1) * t;
+      return y >= toolTop && y <= toolBottom - 12;
     }
 
     function draw() {
@@ -600,7 +620,8 @@
         const shortEdge = Math.min(leftLen, rightLen);
         const [risk, cls] = riskClass(shortEdge, minEdge);
         risks.push(risk);
-        const suggestion = item.segment.angle > 0 ? "向上折" : item.segment.angle < 0 ? "向下折" : "確認角度";
+        const toolCode = "D02";
+        const suggestion = `彎刀 / ${toolCode}`;
         const row = document.createElement("tr");
         row.innerHTML = `
           <td>第 ${bendNo + 1} 折</td>
@@ -617,7 +638,7 @@
         card.className = "step-card";
         card.innerHTML = `
           <h3>第 ${bendNo + 1} 折刀具步驟圖</h3>
-          ${makeToolStepSvg(bendNo + 1, item.segment.angle, leftLen, rightLen, shortEdge, cls)}
+          ${makeToolStepSvg(bendNo + 1, item.segment.angle, leftLen, rightLen, shortEdge, cls, toolCode)}
         `;
         toolPanels.appendChild(card);
 
