@@ -3,52 +3,44 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>折彎機圖形與步驟產生器</title>
+  <title>折彎機刀具步驟圖</title>
   <style>
     :root {
-      --bg: #f4f6f7;
+      --bg: #f3f6f8;
       --panel: #ffffff;
-      --text: #172026;
-      --muted: #64717a;
-      --line: #d8e0e5;
-      --accent: #176b87;
-      --accent-2: #1f8a70;
-      --warn: #a35d00;
+      --text: #14212b;
+      --muted: #647280;
+      --line: #d7e0e6;
+      --blue: #2f6fd6;
+      --knife: #d00000;
+      --node: #f00018;
+      --active: #ffb000;
+      --ok: #147c59;
       --bad: #b42318;
-      --shadow: 0 18px 44px rgba(23, 39, 48, .11);
     }
 
     * { box-sizing: border-box; }
 
     body {
       margin: 0;
-      min-height: 100vh;
-      color: var(--text);
       font-family: "Microsoft JhengHei", "Noto Sans TC", system-ui, sans-serif;
-      background:
-        linear-gradient(135deg, rgba(23,107,135,.13), transparent 34%),
-        linear-gradient(315deg, rgba(31,138,112,.12), transparent 32%),
-        var(--bg);
+      color: var(--text);
+      background: var(--bg);
     }
 
     main {
-      width: min(1220px, calc(100% - 32px));
+      width: min(1200px, calc(100% - 32px));
       margin: 0 auto;
-      padding: 28px 0 42px;
+      padding: 28px 0 40px;
     }
 
     header {
-      display: grid;
-      grid-template-columns: 1fr auto;
-      gap: 16px;
-      align-items: end;
-      margin-bottom: 18px;
+      margin-bottom: 16px;
     }
 
     h1 {
-      margin: 0 0 8px;
-      font-size: clamp(28px, 5vw, 44px);
-      line-height: 1.14;
+      margin: 0 0 6px;
+      font-size: clamp(28px, 4vw, 42px);
     }
 
     p {
@@ -57,24 +49,10 @@
       line-height: 1.7;
     }
 
-    .tag {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      min-height: 38px;
-      padding: 8px 12px;
-      border: 1px solid var(--line);
-      border-radius: 8px;
-      background: rgba(255,255,255,.72);
-      color: var(--accent);
-      font-weight: 800;
-      white-space: nowrap;
-    }
-
     .layout {
       display: grid;
-      grid-template-columns: minmax(380px, .92fr) minmax(0, 1.08fr);
-      gap: 16px;
+      grid-template-columns: 390px 1fr;
+      gap: 14px;
       align-items: start;
     }
 
@@ -82,25 +60,22 @@
       background: var(--panel);
       border: 1px solid var(--line);
       border-radius: 8px;
-      box-shadow: var(--shadow);
+      box-shadow: 0 16px 36px rgba(31, 48, 60, .08);
+      overflow: hidden;
     }
 
-    .panel h2 {
+    h2 {
       margin: 0;
-      padding: 16px 18px 0;
+      padding: 14px 16px;
       font-size: 20px;
+      border-bottom: 1px solid var(--line);
+      background: #f9fbfc;
     }
 
     .controls {
-      padding: 16px 18px 18px;
+      padding: 14px 16px 16px;
       display: grid;
       gap: 12px;
-    }
-
-    .basic {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 10px;
     }
 
     label {
@@ -109,40 +84,31 @@
       font-weight: 800;
     }
 
-    .hint {
-      color: var(--muted);
-      font-size: 13px;
-      font-weight: 400;
+    input, select, button {
+      font: inherit;
     }
 
     input, select {
       width: 100%;
-      min-height: 42px;
+      min-height: 40px;
+      padding: 7px 9px;
       border: 1px solid #cbd6dc;
       border-radius: 8px;
-      padding: 8px 10px;
-      color: var(--text);
-      font: inherit;
       background: #fff;
-    }
-
-    input:focus, select:focus {
-      outline: 3px solid rgba(23,107,135,.18);
-      border-color: var(--accent);
     }
 
     table {
       width: 100%;
       border-collapse: collapse;
-      overflow: hidden;
       border: 1px solid var(--line);
       border-radius: 8px;
+      overflow: hidden;
       background: #fbfcfd;
     }
 
     th, td {
+      padding: 7px;
       border-bottom: 1px solid var(--line);
-      padding: 8px;
       text-align: left;
       vertical-align: top;
     }
@@ -150,86 +116,60 @@
     th {
       color: var(--muted);
       font-size: 13px;
-      font-weight: 800;
-      background: #f6f8f9;
+      background: #f5f7f8;
     }
 
-    td:first-child, th:first-child {
-      width: 54px;
+    th:first-child, td:first-child {
+      width: 46px;
       text-align: center;
-    }
-
-    td:last-child, th:last-child {
-      width: 52px;
-      text-align: center;
-    }
-
-    .icon-btn {
-      width: 34px;
-      min-height: 34px;
-      padding: 0;
-      border-radius: 8px;
-      border: 1px solid var(--line);
-      background: #fff;
-      color: var(--bad);
-      font-weight: 900;
     }
 
     .buttons {
       display: flex;
       flex-wrap: wrap;
-      gap: 10px;
+      gap: 9px;
     }
 
     button {
-      min-height: 42px;
+      min-height: 40px;
       border: 1px solid transparent;
       border-radius: 8px;
-      padding: 9px 14px;
-      font: inherit;
+      padding: 8px 12px;
       font-weight: 800;
       cursor: pointer;
     }
 
     .primary {
       color: #fff;
-      background: var(--accent);
+      background: #176b87;
     }
 
     .secondary {
-      color: var(--accent);
+      color: #176b87;
       background: #eef7fa;
       border-color: #c9e1ea;
     }
 
-    .drawing {
-      padding: 18px;
-      display: grid;
-      gap: 12px;
-    }
-
-    svg {
-      width: 100%;
-      min-height: 430px;
-      border: 1px solid var(--line);
-      border-radius: 8px;
-      background:
-        linear-gradient(#eef3f6 1px, transparent 1px),
-        linear-gradient(90deg, #eef3f6 1px, transparent 1px),
-        #fff;
-      background-size: 24px 24px;
+    .remove {
+      width: 32px;
+      min-height: 32px;
+      padding: 0;
+      color: var(--bad);
+      background: #fff;
+      border-color: var(--line);
     }
 
     .summary {
       display: grid;
-      grid-template-columns: repeat(4, 1fr);
+      grid-template-columns: repeat(3, 1fr);
       gap: 10px;
+      padding: 14px 16px 0;
     }
 
     .metric {
-      padding: 12px;
       border: 1px solid var(--line);
       border-radius: 8px;
+      padding: 10px;
       background: #fbfcfd;
     }
 
@@ -242,65 +182,57 @@
 
     .metric strong {
       font-size: 22px;
-      line-height: 1.1;
     }
 
-    .steps {
-      margin-top: 16px;
-    }
-
-    .steps .panel {
-      padding-bottom: 18px;
-    }
-
-    .tool-panels {
-      display: grid;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: 12px;
-      margin: 14px 18px 0;
-    }
-
-    .step-card {
-      border: 1px solid var(--line);
-      border-radius: 8px;
-      background: #fbfcfd;
-      overflow: hidden;
-    }
-
-    .step-card h3 {
-      margin: 0;
-      padding: 10px 12px;
-      font-size: 15px;
-      border-bottom: 1px solid var(--line);
-      background: #f6f8f9;
-    }
-
-    .step-card svg {
-      min-height: 300px;
-      border: 0;
-      border-radius: 0;
+    svg {
+      width: 100%;
+      display: block;
       background: #fff;
     }
 
-    .hidden-steps {
-      display: none;
+    #finalSvg {
+      min-height: 420px;
+      margin-top: 12px;
+      border-top: 1px solid var(--line);
+      background:
+        linear-gradient(#eef3f6 1px, transparent 1px),
+        linear-gradient(90deg, #eef3f6 1px, transparent 1px),
+        #fff;
+      background-size: 24px 24px;
     }
 
-    .ok { color: var(--accent-2); font-weight: 800; }
-    .warn { color: var(--warn); font-weight: 800; }
-    .bad { color: var(--bad); font-weight: 800; }
+    .steps {
+      margin-top: 14px;
+    }
 
-    @media (max-width: 940px) {
-      header, .layout, .basic, .summary, .tool-panels {
+    .cards {
+      padding: 14px 16px 16px;
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .card {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      overflow: hidden;
+      background: #fff;
+    }
+
+    .card h3 {
+      margin: 0;
+      padding: 10px 12px;
+      font-size: 15px;
+      background: #f7f9fa;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .ok { fill: var(--ok); color: var(--ok); font-weight: 900; }
+    .bad { fill: var(--bad); color: var(--bad); font-weight: 900; }
+
+    @media (max-width: 900px) {
+      .layout, .cards, .summary {
         grid-template-columns: 1fr;
-      }
-
-      .tag {
-        justify-self: start;
-      }
-
-      svg {
-        min-height: 340px;
       }
     }
   </style>
@@ -308,385 +240,263 @@
 <body>
   <main>
     <header>
-      <div>
-        <h1>折彎機圖形與步驟產生器</h1>
-        <p>左邊輸入每段長度與折角，右邊即時產生折彎形狀，下方用刀具線顯示每一步折彎結果與是否卡刀。</p>
-      </div>
-      <div class="tag">Excel VBA 轉網頁作品</div>
+      <h1>折彎機刀具步驟圖</h1>
+      <p>輸入段長與折角後，圖形會照順序累積折彎。第 2 步會保留第 1 步，第 3 步會保留前兩步，並顯示彎刀線與是否卡刀。</p>
     </header>
 
     <section class="layout">
       <div class="panel">
         <h2>輸入資料</h2>
         <div class="controls">
-          <div class="basic">
-            <label>
-              板厚 mm
-              <span class="hint">用來估算 V 開口與最短折邊</span>
-              <input id="thickness" type="number" min="0.1" step="0.1" value="2">
-            </label>
-            <label>
-              板長 mm
-              <span class="hint">留空或 0 時自動用段長總和</span>
-              <input id="plateLength" type="number" min="0" step="1" value="200">
-            </label>
-          </div>
-
-          <table aria-label="折彎段資料">
+          <label>
+            板厚 mm
+            <input id="thickness" type="number" min="0.1" step="0.1" value="2">
+          </label>
+          <table>
             <thead>
               <tr>
-                <th>段次</th>
-                <th>段長 mm</th>
-                <th>折角 °</th>
+                <th>段</th>
+                <th>段長</th>
+                <th>折角</th>
                 <th>折彎</th>
                 <th></th>
               </tr>
             </thead>
-            <tbody id="segmentRows"></tbody>
+            <tbody id="rows"></tbody>
           </table>
-
           <div class="buttons">
-            <button class="primary" type="button" id="drawBtn">產生圖形</button>
-            <button class="secondary" type="button" id="addRowBtn">新增段次</button>
-            <button class="secondary" type="button" id="sampleBtn">套用範例</button>
-            <button class="secondary" type="button" id="clearBtn">清除</button>
+            <button class="primary" id="drawBtn" type="button">產生圖形</button>
+            <button class="secondary" id="addBtn" type="button">新增段次</button>
+            <button class="secondary" id="sampleBtn" type="button">套用範例</button>
           </div>
         </div>
       </div>
 
-      <div class="panel drawing">
+      <div class="panel">
+        <h2>折彎完成圖</h2>
         <div class="summary">
-          <div class="metric"><span>總展開長</span><strong id="totalLength">0 mm</strong></div>
+          <div class="metric"><span>總長</span><strong id="total">0</strong></div>
           <div class="metric"><span>折彎數</span><strong id="bendCount">0</strong></div>
-          <div class="metric"><span>建議 V 開口</span><strong id="vOpen">0 mm</strong></div>
-          <div class="metric"><span>整體風險</span><strong id="riskText">-</strong></div>
+          <div class="metric"><span>建議最短邊</span><strong id="minEdge">0</strong></div>
         </div>
-        <svg id="drawingSvg" viewBox="0 0 720 430" role="img" aria-label="折彎圖形"></svg>
+        <svg id="finalSvg" viewBox="0 0 720 420"></svg>
       </div>
     </section>
 
-    <section class="steps">
-      <div class="panel">
-        <h2>折彎步驟與刀具圖</h2>
-        <table class="hidden-steps">
-          <thead>
-            <tr>
-              <th>折次</th>
-              <th>折角</th>
-              <th>左邊長</th>
-              <th>右邊長</th>
-              <th>短邊</th>
-              <th>刀具</th>
-              <th>結果</th>
-            </tr>
-          </thead>
-          <tbody id="stepRows"></tbody>
-        </table>
-        <div class="tool-panels" id="toolPanels"></div>
-      </div>
+    <section class="steps panel">
+      <h2>彎刀步驟與卡刀判斷</h2>
+      <div class="cards" id="cards"></div>
     </section>
   </main>
 
   <script>
-    const tbody = document.querySelector("#segmentRows");
-    const stepRows = document.querySelector("#stepRows");
-    const toolPanels = document.querySelector("#toolPanels");
-    const svg = document.querySelector("#drawingSvg");
-    const thicknessInput = document.querySelector("#thickness");
-    const plateLengthInput = document.querySelector("#plateLength");
+    const rows = document.querySelector("#rows");
+    const cards = document.querySelector("#cards");
+    const finalSvg = document.querySelector("#finalSvg");
+    const thickness = document.querySelector("#thickness");
 
-    const sampleSegments = [
+    const sample = [
       { length: 30, angle: 0, bend: false },
       { length: 35, angle: 90, bend: true },
       { length: 45, angle: -90, bend: true },
-      { length: 30, angle: 90, bend: true },
-      { length: 40, angle: 0, bend: false }
+      { length: 30, angle: 90, bend: true }
     ];
 
-    function normalizeAngle(angle) {
+    function n(value) {
+      const parsed = Number(value);
+      return Number.isFinite(parsed) ? parsed : 0;
+    }
+
+    function normalize(angle) {
       let value = angle % 360;
       if (value < 0) value += 360;
       return value;
     }
 
-    function readNumber(value) {
-      const number = Number(value);
-      return Number.isFinite(number) ? number : 0;
-    }
-
-    function addRow(data = { length: 20, angle: 0, bend: false }) {
-      const row = document.createElement("tr");
-      row.innerHTML = `
-        <td class="row-no"></td>
-        <td><input class="seg-length" type="number" min="0" step="1" value="${data.length}"></td>
-        <td><input class="seg-angle" type="number" step="1" value="${data.angle}"></td>
+    function addRow(data = { length: 30, angle: 0, bend: false }) {
+      const tr = document.createElement("tr");
+      tr.innerHTML = `
+        <td class="no"></td>
+        <td><input class="len" type="number" min="0" step="1" value="${data.length}"></td>
+        <td><input class="ang" type="number" step="1" value="${data.angle}"></td>
         <td>
-          <select class="seg-bend">
+          <select class="bend">
             <option value="yes"${data.bend ? " selected" : ""}>是</option>
             <option value="no"${data.bend ? "" : " selected"}>否</option>
           </select>
         </td>
-        <td><button class="icon-btn" type="button" title="刪除">×</button></td>
+        <td><button class="remove" type="button" title="刪除">×</button></td>
       `;
-      row.querySelector("button").addEventListener("click", () => {
-        row.remove();
+      tr.querySelector(".remove").addEventListener("click", () => {
+        tr.remove();
         renumber();
         draw();
       });
-      row.querySelectorAll("input,select").forEach(input => input.addEventListener("input", draw));
-      tbody.appendChild(row);
+      tr.querySelectorAll("input,select").forEach(el => el.addEventListener("input", draw));
+      rows.appendChild(tr);
       renumber();
     }
 
     function renumber() {
-      [...tbody.querySelectorAll("tr")].forEach((row, index) => {
-        row.querySelector(".row-no").textContent = index + 1;
+      [...rows.querySelectorAll("tr")].forEach((tr, i) => {
+        tr.querySelector(".no").textContent = i + 1;
       });
     }
 
     function getSegments() {
-      return [...tbody.querySelectorAll("tr")]
-        .map(row => ({
-          length: Math.max(0, readNumber(row.querySelector(".seg-length").value)),
-          angle: readNumber(row.querySelector(".seg-angle").value),
-          bend: row.querySelector(".seg-bend").value === "yes"
+      return [...rows.querySelectorAll("tr")]
+        .map(tr => ({
+          length: Math.max(0, n(tr.querySelector(".len").value)),
+          angle: n(tr.querySelector(".ang").value),
+          bend: tr.querySelector(".bend").value === "yes"
         }))
-        .filter(segment => segment.length > 0);
+        .filter(seg => seg.length > 0);
     }
 
-    function appendRemainingLength(segments) {
-      const plateLength = readNumber(plateLengthInput.value);
-      const used = segments.reduce((sum, segment) => sum + segment.length, 0);
-      if (plateLength > used) {
-        segments.push({ length: plateLength - used, angle: 0, bend: false, auto: true });
-      }
-      return segments;
-    }
-
-    function computePoints(segments) {
-      let currentAngle = 0;
+    function pointsFor(segments, folded) {
+      let angle = 0;
       let x = 0;
       let y = 0;
-      const points = [{ x, y, angle: 0 }];
+      const points = [{ x, y }];
 
-      segments.forEach((segment, index) => {
-        if (index > 0) currentAngle = normalizeAngle(currentAngle + segment.angle);
-        const rad = currentAngle * Math.PI / 180;
-        x += segment.length * Math.cos(rad);
-        y += segment.length * Math.sin(rad);
-        points.push({ x, y, angle: currentAngle });
+      segments.forEach((seg, index) => {
+        if (index > 0 && folded.has(index)) {
+          angle = normalize(angle + seg.angle);
+        }
+        const rad = angle * Math.PI / 180;
+        x += seg.length * Math.cos(rad);
+        y += seg.length * Math.sin(rad);
+        points.push({ x, y });
       });
 
       return points;
     }
 
-    function scalePoints(points) {
-      const minX = Math.min(...points.map(point => point.x));
-      const maxX = Math.max(...points.map(point => point.x));
-      const minY = Math.min(...points.map(point => point.y));
-      const maxY = Math.max(...points.map(point => point.y));
-      const width = Math.max(1, maxX - minX);
-      const height = Math.max(1, maxY - minY);
-      const margin = 46;
-      const scale = Math.min((720 - margin * 2) / width, (430 - margin * 2) / height);
+    function fit(points, width, height, margin, anchorIndex = null, anchorX = null, anchorY = null) {
+      const minX = Math.min(...points.map(p => p.x));
+      const maxX = Math.max(...points.map(p => p.x));
+      const minY = Math.min(...points.map(p => p.y));
+      const maxY = Math.max(...points.map(p => p.y));
+      const scale = Math.min((width - margin * 2) / Math.max(1, maxX - minX), (height - margin * 2) / Math.max(1, maxY - minY));
 
-      return points.map(point => ({
-        x: margin + (point.x - minX) * scale,
-        y: 430 - margin - (point.y - minY) * scale
+      if (anchorIndex !== null) {
+        const anchor = points[anchorIndex];
+        return points.map(p => ({
+          x: anchorX + (p.x - anchor.x) * scale,
+          y: anchorY - (p.y - anchor.y) * scale
+        }));
+      }
+
+      return points.map(p => ({
+        x: margin + (p.x - minX) * scale,
+        y: height - margin - (p.y - minY) * scale
       }));
     }
 
-    function riskClass(shortEdge, minEdge) {
-      if (shortEdge < minEdge) return ["高", "bad"];
-      if (shortEdge < minEdge * 1.5) return ["中", "warn"];
-      return ["低", "ok"];
+    function poly(points) {
+      return points.map(p => `${p.x},${p.y}`).join(" ");
     }
 
-    function makeToolStepSvg(stepNo, angle, leftLen, rightLen, shortEdge, cls, toolCode) {
-      const centerX = 300;
-      const bendY = 210;
-      const scale = Math.min(2.3, 145 / Math.max(leftLen, rightLen, 1));
-      const leftLength = Math.max(55, leftLen * scale);
-      const rightLength = Math.max(55, rightLen * scale);
-      const prevRad = angle > 0 ? -135 * Math.PI / 180 : 180 * Math.PI / 180;
-      const nextRad = angle > 0 ? 180 * Math.PI / 180 : -45 * Math.PI / 180;
-      const leftX = centerX + leftLength * Math.cos(prevRad);
-      const leftY = bendY + leftLength * Math.sin(prevRad);
-      const rightX = centerX + rightLength * Math.cos(nextRad);
-      const rightY = bendY + rightLength * Math.sin(nextRad);
-      const midX = (leftX + centerX) / 2;
-      const midY = (leftY + bendY) / 2;
-      const rightMidX = (rightX + centerX) / 2;
-      const rightMidY = (rightY + bendY) / 2;
-      const toolX = centerX;
-      const toolTop = 42;
-      const toolBottom = bendY - 4;
-      const leftHit = segmentNearVerticalTool(leftX, leftY, centerX, bendY, toolX, toolTop, toolBottom);
-      const rightHit = segmentNearVerticalTool(centerX, bendY, rightX, rightY, toolX, toolTop, toolBottom);
-      const hit = leftHit || rightHit;
-      const resultText = hit ? "卡刀" : cls === "bad" ? "短邊不足" : "不卡刀";
-      const resultClass = hit ? "bad" : cls;
-      const hitDot = hit ? `<circle cx="${toolX}" cy="${bendY - 42}" r="8" fill="#b42318"></circle><text x="${toolX + 12}" y="${bendY - 38}" font-size="13" font-weight="900" fill="#b42318">卡刀</text>` : "";
+    function segmentHitsTool(a, b, toolX, top, bottom) {
+      if (Math.abs(b.x - a.x) < 0.001) {
+        if (Math.abs(a.x - toolX) > 8) return false;
+        return Math.max(Math.min(a.y, b.y), top) <= Math.min(Math.max(a.y, b.y), bottom);
+      }
+      const t = (toolX - a.x) / (b.x - a.x);
+      if (t <= 0.04 || t >= 0.96) return false;
+      const y = a.y + (b.y - a.y) * t;
+      return y >= top && y <= bottom;
+    }
+
+    function cardSvg(step, bendIndex, segments, folded, shortEdge, minEdge) {
+      const width = 520;
+      const height = 330;
+      const toolX = 330;
+      const bendY = 220;
+      const toolTop = 46;
+      const toolBottom = bendY - 6;
+      const raw = pointsFor(segments, folded);
+      const pts = fit(raw, width, height, 42, bendIndex, toolX, bendY);
+      const hit = pts.some((p, i) => {
+        if (i === 0 || i === bendIndex || i === bendIndex + 1) return false;
+        return segmentHitsTool(pts[i - 1], p, toolX, toolTop, toolBottom);
+      });
+      const ok = !hit && shortEdge >= minEdge;
+      const labels = segments.map((seg, i) => {
+        const a = pts[i];
+        const b = pts[i + 1];
+        return `<text x="${(a.x + b.x) / 2 + 8}" y="${(a.y + b.y) / 2 - 8}" font-size="13" font-weight="900">${seg.length}</text>`;
+      }).join("");
+      const nodes = pts.map((p, i) => {
+        const active = i === bendIndex;
+        return `<circle cx="${p.x}" cy="${p.y}" r="${active ? 7 : 5}" fill="${active ? "var(--active)" : "var(--node)"}" stroke="var(--node)" stroke-width="${active ? 2 : 0}"></circle>`;
+      }).join("");
 
       return `
-        <svg viewBox="0 0 420 300" role="img" aria-label="第 ${stepNo} 折刀具示意圖">
-          <rect x="1" y="1" width="418" height="298" fill="#ffffff"></rect>
-          <text x="16" y="30" font-size="15" font-weight="900" fill="#172026">步驟 ${stepNo}：第${stepNo}折　彎刀 / ${toolCode}</text>
-          <text x="${toolX + 14}" y="52" font-size="12" font-weight="900" fill="#d00000">T100${stepNo}</text>
-          <line x1="${toolX}" y1="${toolTop}" x2="${toolX}" y2="${toolBottom}" stroke="#d00000" stroke-width="2" stroke-dasharray="7 6"></line>
-
-          <polyline points="${leftX},${leftY} ${centerX},${bendY} ${rightX},${rightY}" fill="none" stroke="#2f6fd6" stroke-width="3"></polyline>
-          <circle cx="${leftX}" cy="${leftY}" r="5" fill="#f00018"></circle>
-          <circle cx="${midX}" cy="${midY}" r="5" fill="#f00018"></circle>
-          <circle cx="${centerX}" cy="${bendY}" r="6" fill="#ffb000" stroke="#f00018" stroke-width="2"></circle>
-          <circle cx="${rightMidX}" cy="${rightMidY}" r="5" fill="#f00018"></circle>
-          <circle cx="${rightX}" cy="${rightY}" r="5" fill="#f00018"></circle>
-          ${hitDot}
-
-          <text x="${midX - 20}" y="${midY - 10}" font-size="12" font-weight="800" fill="#172026">${leftLen}</text>
-          <text x="${rightMidX + 8}" y="${rightMidY - 8}" font-size="12" font-weight="800" fill="#172026">${rightLen}</text>
-          <text x="${centerX + 10}" y="${bendY - 6}" font-size="12" font-weight="800" fill="#172026">${shortEdge}</text>
-          <text x="16" y="64" font-size="13" fill="#64717a">短邊 ${shortEdge} mm｜<tspan class="${resultClass}">${resultText}</tspan></text>
+        <svg viewBox="0 0 ${width} ${height}">
+          <rect x="0" y="0" width="${width}" height="${height}" fill="#fff"></rect>
+          <text x="18" y="32" font-size="18" font-weight="900">步驟 ${step}：第${step}折　彎刀 / D02</text>
+          <text x="18" y="66" font-size="15" fill="#647280">短邊 ${shortEdge} mm｜<tspan class="${ok ? "ok" : "bad"}">${ok ? "不卡刀" : "卡刀或短邊不足"}</tspan></text>
+          <text x="${toolX + 16}" y="60" font-size="14" font-weight="900" fill="var(--knife)">T100${step}</text>
+          <line x1="${toolX}" y1="${toolTop}" x2="${toolX}" y2="${toolBottom}" stroke="var(--knife)" stroke-width="2" stroke-dasharray="8 6"></line>
+          <polyline points="${poly(pts)}" fill="none" stroke="var(--blue)" stroke-width="4"></polyline>
+          ${labels}
+          ${nodes}
+          ${hit ? `<circle cx="${toolX}" cy="${bendY - 48}" r="8" fill="var(--bad)"></circle><text x="${toolX + 13}" y="${bendY - 43}" font-size="14" font-weight="900" fill="var(--bad)">卡刀</text>` : ""}
         </svg>
       `;
     }
 
-    function segmentNearVerticalTool(x1, y1, x2, y2, toolX, toolTop, toolBottom) {
-      if (Math.abs(x2 - x1) < 0.001) {
-        if (Math.abs(x1 - toolX) > 9) return false;
-        return Math.max(Math.min(y1, y2), toolTop) <= Math.min(Math.max(y1, y2), toolBottom) - 12;
-      }
-      const t = (toolX - x1) / (x2 - x1);
-      if (t <= 0.04 || t >= 0.96) return false;
-      const y = y1 + (y2 - y1) * t;
-      return y >= toolTop && y <= toolBottom - 12;
+    function drawFinal(segments, folded) {
+      const points = fit(pointsFor(segments, folded), 720, 420, 52);
+      finalSvg.innerHTML = `
+        <polyline points="${poly(points)}" fill="none" stroke="#176b87" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"></polyline>
+        ${points.map((p, i) => `<circle cx="${p.x}" cy="${p.y}" r="6" fill="${i === 0 ? "#147c59" : "#fff"}" stroke="#176b87" stroke-width="3"></circle>`).join("")}
+        ${segments.map((seg, i) => {
+          const a = points[i];
+          const b = points[i + 1];
+          return `<text x="${(a.x + b.x) / 2}" y="${(a.y + b.y) / 2 - 12}" text-anchor="middle" font-size="15" font-weight="900">${seg.length}mm</text>`;
+        }).join("")}
+      `;
     }
 
     function draw() {
-      const rawSegments = getSegments();
-      const segments = appendRemainingLength([...rawSegments]);
-      const thickness = Math.max(0, readNumber(thicknessInput.value));
-      const minEdge = Math.max(8, thickness * 6);
-      const points = computePoints(segments);
-      const screen = scalePoints(points);
-      const bendIndexes = segments
-        .map((segment, index) => ({ segment, index }))
-        .filter(item => item.index > 0 && (item.segment.bend || item.segment.angle !== 0));
+      const segments = getSegments();
+      const bendIndexes = segments.map((seg, i) => ({ seg, i })).filter(item => item.i > 0 && (item.seg.bend || item.seg.angle !== 0));
+      const allFolded = new Set(bendIndexes.map(item => item.i));
+      const minEdgeValue = Math.max(8, n(thickness.value) * 6);
+      const total = segments.reduce((sum, seg) => sum + seg.length, 0);
 
-      const totalLength = segments.reduce((sum, segment) => sum + segment.length, 0);
-      const risks = [];
-
-      svg.innerHTML = "";
-      const path = document.createElementNS("http://www.w3.org/2000/svg", "polyline");
-      path.setAttribute("points", screen.map(point => `${point.x},${point.y}`).join(" "));
-      path.setAttribute("fill", "none");
-      path.setAttribute("stroke", "#176b87");
-      path.setAttribute("stroke-width", "7");
-      path.setAttribute("stroke-linecap", "round");
-      path.setAttribute("stroke-linejoin", "round");
-      svg.appendChild(path);
-
-      screen.forEach((point, index) => {
-        const circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
-        circle.setAttribute("cx", point.x);
-        circle.setAttribute("cy", point.y);
-        circle.setAttribute("r", index === 0 || index === screen.length - 1 ? 6 : 5);
-        circle.setAttribute("fill", index === 0 ? "#1f8a70" : "#ffffff");
-        circle.setAttribute("stroke", "#176b87");
-        circle.setAttribute("stroke-width", "3");
-        svg.appendChild(circle);
-      });
-
-      segments.forEach((segment, index) => {
-        if (index >= screen.length - 1) return;
-        const a = screen[index];
-        const b = screen[index + 1];
-        const label = document.createElementNS("http://www.w3.org/2000/svg", "text");
-        label.setAttribute("x", (a.x + b.x) / 2);
-        label.setAttribute("y", (a.y + b.y) / 2 - 10);
-        label.setAttribute("text-anchor", "middle");
-        label.setAttribute("font-size", "14");
-        label.setAttribute("font-weight", "700");
-        label.setAttribute("fill", "#172026");
-        label.textContent = `${segment.length}mm${segment.auto ? " 補長" : ""}`;
-        svg.appendChild(label);
-      });
-
-      stepRows.innerHTML = "";
-      toolPanels.innerHTML = "";
-      bendIndexes.forEach((item, bendNo) => {
-        const leftLen = segments[item.index - 1]?.length || 0;
-        const rightLen = segments[item.index]?.length || 0;
-        const shortEdge = Math.min(leftLen, rightLen);
-        const [risk, cls] = riskClass(shortEdge, minEdge);
-        risks.push(risk);
-        const toolCode = "D02";
-        const suggestion = `彎刀 / ${toolCode}`;
-        const row = document.createElement("tr");
-        row.innerHTML = `
-          <td>第 ${bendNo + 1} 折</td>
-          <td>${item.segment.angle}°</td>
-          <td>${leftLen} mm</td>
-          <td>${rightLen} mm</td>
-          <td>${shortEdge} mm</td>
-          <td>${suggestion}</td>
-          <td class="${cls}">${risk === "高" ? "短邊不足，需注意" : risk === "中" ? "可試作，需確認模具" : "可製作"}</td>
-        `;
-        stepRows.appendChild(row);
-
-        const card = document.createElement("article");
-        card.className = "step-card";
-        card.innerHTML = `
-          <h3>第 ${bendNo + 1} 折刀具步驟圖</h3>
-          ${makeToolStepSvg(bendNo + 1, item.segment.angle, leftLen, rightLen, shortEdge, cls, toolCode)}
-        `;
-        toolPanels.appendChild(card);
-
-        const point = screen[item.index];
-        const mark = document.createElementNS("http://www.w3.org/2000/svg", "text");
-        mark.setAttribute("x", point.x + 10);
-        mark.setAttribute("y", point.y - 10);
-        mark.setAttribute("font-size", "14");
-        mark.setAttribute("font-weight", "900");
-        mark.setAttribute("fill", cls === "bad" ? "#b42318" : cls === "warn" ? "#a35d00" : "#1f8a70");
-        mark.textContent = `折${bendNo + 1}`;
-        svg.appendChild(mark);
-      });
-
-      if (bendIndexes.length === 0) {
-        stepRows.innerHTML = '<tr><td colspan="7">目前沒有折彎角度，請至少在第 2 段之後輸入折角。</td></tr>';
-        toolPanels.innerHTML = "";
-      }
-
-      document.querySelector("#totalLength").textContent = `${Math.round(totalLength * 100) / 100} mm`;
+      document.querySelector("#total").textContent = `${total} mm`;
       document.querySelector("#bendCount").textContent = bendIndexes.length;
-      document.querySelector("#vOpen").textContent = `${minEdge} mm`;
-      const overallRisk = risks.includes("高") ? ["高", "bad"] : risks.includes("中") ? ["中", "warn"] : ["低", "ok"];
-      document.querySelector("#riskText").innerHTML = `<span class="${overallRisk[1]}">${overallRisk[0]}</span>`;
+      document.querySelector("#minEdge").textContent = `${minEdgeValue} mm`;
+      drawFinal(segments, allFolded);
+
+      cards.innerHTML = "";
+      const folded = new Set();
+      bendIndexes.forEach((item, i) => {
+        folded.add(item.i);
+        const shortEdge = Math.min(segments[item.i - 1]?.length || 0, segments[item.i]?.length || 0);
+        const article = document.createElement("article");
+        article.className = "card";
+        article.innerHTML = `<h3>第 ${i + 1} 折刀具步驟圖</h3>${cardSvg(i + 1, item.i, segments, folded, shortEdge, minEdgeValue)}`;
+        cards.appendChild(article);
+      });
     }
 
     function loadSample() {
-      tbody.innerHTML = "";
-      sampleSegments.forEach(addRow);
-      plateLengthInput.value = 200;
-      thicknessInput.value = 2;
+      rows.innerHTML = "";
+      sample.forEach(addRow);
       draw();
     }
 
     document.querySelector("#drawBtn").addEventListener("click", draw);
-    document.querySelector("#addRowBtn").addEventListener("click", () => {
+    document.querySelector("#addBtn").addEventListener("click", () => {
       addRow();
       draw();
     });
     document.querySelector("#sampleBtn").addEventListener("click", loadSample);
-    document.querySelector("#clearBtn").addEventListener("click", () => {
-      tbody.innerHTML = "";
-      addRow({ length: 20, angle: 0, bend: false });
-      addRow({ length: 20, angle: 90, bend: true });
-      draw();
-    });
-    thicknessInput.addEventListener("input", draw);
-    plateLengthInput.addEventListener("input", draw);
+    thickness.addEventListener("input", draw);
 
     loadSample();
   </script>
