@@ -1,30 +1,672 @@
 <!doctype html>
 <html lang="zh-Hant-TW">
 <head>
-<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
-<title>折彎機圖形與步驟產生器</title>
-<style>
-:root{--bg:#f4f6f7;--panel:#fff;--text:#172026;--muted:#64717a;--line:#d8e0e5;--accent:#176b87;--accent2:#1f8a70;--warn:#a35d00;--bad:#b42318;--shadow:0 18px 44px rgba(23,39,48,.11)}*{box-sizing:border-box}body{margin:0;min-height:100vh;color:var(--text);font-family:"Microsoft JhengHei","Noto Sans TC",system-ui,sans-serif;background:linear-gradient(135deg,rgba(23,107,135,.13),transparent 34%),linear-gradient(315deg,rgba(31,138,112,.12),transparent 32%),var(--bg)}main{width:min(1220px,calc(100% - 32px));margin:0 auto;padding:28px 0 42px}header{display:grid;grid-template-columns:1fr auto;gap:16px;align-items:end;margin-bottom:18px}h1{margin:0 0 8px;font-size:clamp(28px,5vw,44px);line-height:1.14}p{margin:0;color:var(--muted);line-height:1.7}.tag{display:inline-flex;align-items:center;justify-content:center;min-height:38px;padding:8px 12px;border:1px solid var(--line);border-radius:8px;background:rgba(255,255,255,.72);color:var(--accent);font-weight:800;white-space:nowrap}.layout{display:grid;grid-template-columns:minmax(380px,.92fr) minmax(0,1.08fr);gap:16px;align-items:start}.panel{background:var(--panel);border:1px solid var(--line);border-radius:8px;box-shadow:var(--shadow)}.panel h2{margin:0;padding:16px 18px 0;font-size:20px}.controls{padding:16px 18px 18px;display:grid;gap:12px}.basic{display:grid;grid-template-columns:1fr 1fr;gap:10px}label{display:grid;gap:6px;font-weight:800}.hint{color:var(--muted);font-size:13px;font-weight:400}input,select{width:100%;min-height:42px;border:1px solid #cbd6dc;border-radius:8px;padding:8px 10px;color:var(--text);font:inherit;background:#fff}input:focus,select:focus{outline:3px solid rgba(23,107,135,.18);border-color:var(--accent)}table{width:100%;border-collapse:collapse;overflow:hidden;border:1px solid var(--line);border-radius:8px;background:#fbfcfd}th,td{border-bottom:1px solid var(--line);padding:8px;text-align:left;vertical-align:top}th{color:var(--muted);font-size:13px;font-weight:800;background:#f6f8f9}td:first-child,th:first-child{width:54px;text-align:center}td:last-child,th:last-child{width:52px;text-align:center}.icon-btn{width:34px;min-height:34px;padding:0;border-radius:8px;border:1px solid var(--line);background:#fff;color:var(--bad);font-weight:900}.buttons{display:flex;flex-wrap:wrap;gap:10px}button{min-height:42px;border:1px solid transparent;border-radius:8px;padding:9px 14px;font:inherit;font-weight:800;cursor:pointer}.primary{color:#fff;background:var(--accent)}.secondary{color:var(--accent);background:#eef7fa;border-color:#c9e1ea}.drawing{padding:18px;display:grid;gap:12px}svg{width:100%;min-height:430px;border:1px solid var(--line);border-radius:8px;background:linear-gradient(#eef3f6 1px,transparent 1px),linear-gradient(90deg,#eef3f6 1px,transparent 1px),#fff;background-size:24px 24px}.summary{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}.metric{padding:12px;border:1px solid var(--line);border-radius:8px;background:#fbfcfd}.metric span{display:block;color:var(--muted);font-size:13px;margin-bottom:4px}.metric strong{font-size:22px;line-height:1.1}.steps{margin-top:16px}.steps .panel{padding-bottom:18px}.steps table{width:calc(100% - 36px);margin:14px 18px 0}.ok{color:var(--accent2);font-weight:800}.warn{color:var(--warn);font-weight:800}.bad{color:var(--bad);font-weight:800}@media(max-width:940px){header,.layout,.basic,.summary{grid-template-columns:1fr}.tag{justify-self:start}svg{min-height:340px}}
-</style>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>折彎機圖形與步驟產生器</title>
+  <style>
+    :root {
+      --bg: #f4f6f7;
+      --panel: #ffffff;
+      --text: #172026;
+      --muted: #64717a;
+      --line: #d8e0e5;
+      --accent: #176b87;
+      --accent-2: #1f8a70;
+      --warn: #a35d00;
+      --bad: #b42318;
+      --shadow: 0 18px 44px rgba(23, 39, 48, .11);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      color: var(--text);
+      font-family: "Microsoft JhengHei", "Noto Sans TC", system-ui, sans-serif;
+      background:
+        linear-gradient(135deg, rgba(23,107,135,.13), transparent 34%),
+        linear-gradient(315deg, rgba(31,138,112,.12), transparent 32%),
+        var(--bg);
+    }
+
+    main {
+      width: min(1220px, calc(100% - 32px));
+      margin: 0 auto;
+      padding: 28px 0 42px;
+    }
+
+    header {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 16px;
+      align-items: end;
+      margin-bottom: 18px;
+    }
+
+    h1 {
+      margin: 0 0 8px;
+      font-size: clamp(28px, 5vw, 44px);
+      line-height: 1.14;
+    }
+
+    p {
+      margin: 0;
+      color: var(--muted);
+      line-height: 1.7;
+    }
+
+    .tag {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 38px;
+      padding: 8px 12px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: rgba(255,255,255,.72);
+      color: var(--accent);
+      font-weight: 800;
+      white-space: nowrap;
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: minmax(380px, .92fr) minmax(0, 1.08fr);
+      gap: 16px;
+      align-items: start;
+    }
+
+    .panel {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      box-shadow: var(--shadow);
+    }
+
+    .panel h2 {
+      margin: 0;
+      padding: 16px 18px 0;
+      font-size: 20px;
+    }
+
+    .controls {
+      padding: 16px 18px 18px;
+      display: grid;
+      gap: 12px;
+    }
+
+    .basic {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    label {
+      display: grid;
+      gap: 6px;
+      font-weight: 800;
+    }
+
+    .hint {
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 400;
+    }
+
+    input, select {
+      width: 100%;
+      min-height: 42px;
+      border: 1px solid #cbd6dc;
+      border-radius: 8px;
+      padding: 8px 10px;
+      color: var(--text);
+      font: inherit;
+      background: #fff;
+    }
+
+    input:focus, select:focus {
+      outline: 3px solid rgba(23,107,135,.18);
+      border-color: var(--accent);
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      overflow: hidden;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #fbfcfd;
+    }
+
+    th, td {
+      border-bottom: 1px solid var(--line);
+      padding: 8px;
+      text-align: left;
+      vertical-align: top;
+    }
+
+    th {
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 800;
+      background: #f6f8f9;
+    }
+
+    td:first-child, th:first-child {
+      width: 54px;
+      text-align: center;
+    }
+
+    td:last-child, th:last-child {
+      width: 52px;
+      text-align: center;
+    }
+
+    .icon-btn {
+      width: 34px;
+      min-height: 34px;
+      padding: 0;
+      border-radius: 8px;
+      border: 1px solid var(--line);
+      background: #fff;
+      color: var(--bad);
+      font-weight: 900;
+    }
+
+    .buttons {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    button {
+      min-height: 42px;
+      border: 1px solid transparent;
+      border-radius: 8px;
+      padding: 9px 14px;
+      font: inherit;
+      font-weight: 800;
+      cursor: pointer;
+    }
+
+    .primary {
+      color: #fff;
+      background: var(--accent);
+    }
+
+    .secondary {
+      color: var(--accent);
+      background: #eef7fa;
+      border-color: #c9e1ea;
+    }
+
+    .drawing {
+      padding: 18px;
+      display: grid;
+      gap: 12px;
+    }
+
+    svg {
+      width: 100%;
+      min-height: 430px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background:
+        linear-gradient(#eef3f6 1px, transparent 1px),
+        linear-gradient(90deg, #eef3f6 1px, transparent 1px),
+        #fff;
+      background-size: 24px 24px;
+    }
+
+    .summary {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+    }
+
+    .metric {
+      padding: 12px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #fbfcfd;
+    }
+
+    .metric span {
+      display: block;
+      color: var(--muted);
+      font-size: 13px;
+      margin-bottom: 4px;
+    }
+
+    .metric strong {
+      font-size: 22px;
+      line-height: 1.1;
+    }
+
+    .steps {
+      margin-top: 16px;
+    }
+
+    .steps .panel {
+      padding-bottom: 18px;
+    }
+
+    .steps table {
+      width: calc(100% - 36px);
+      margin: 14px 18px 0;
+    }
+
+    .tool-panels {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+      margin: 14px 18px 0;
+    }
+
+    .step-card {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #fbfcfd;
+      overflow: hidden;
+    }
+
+    .step-card h3 {
+      margin: 0;
+      padding: 10px 12px;
+      font-size: 15px;
+      border-bottom: 1px solid var(--line);
+      background: #f6f8f9;
+    }
+
+    .step-card svg {
+      min-height: 220px;
+      border: 0;
+      border-radius: 0;
+      background: #fff;
+    }
+
+    .ok { color: var(--accent-2); font-weight: 800; }
+    .warn { color: var(--warn); font-weight: 800; }
+    .bad { color: var(--bad); font-weight: 800; }
+
+    @media (max-width: 940px) {
+      header, .layout, .basic, .summary, .tool-panels {
+        grid-template-columns: 1fr;
+      }
+
+      .tag {
+        justify-self: start;
+      }
+
+      svg {
+        min-height: 340px;
+      }
+    }
+  </style>
 </head>
-<body><main>
-<header><div><h1>折彎機圖形與步驟產生器</h1><p>左邊輸入每段長度與折角，右邊即時產生折彎形狀，下方列出折彎順序、左右邊長、短邊與風險提示。</p></div><div class="tag">Excel VBA 轉網頁作品</div></header>
-<section class="layout"><div class="panel"><h2>輸入資料</h2><div class="controls"><div class="basic"><label>板厚 mm<span class="hint">用來估算 V 開口與最短折邊</span><input id="thickness" type="number" min="0.1" step="0.1" value="2"></label><label>板長 mm<span class="hint">留空或 0 時自動用段長總和</span><input id="plateLength" type="number" min="0" step="1" value="200"></label></div><table aria-label="折彎段資料"><thead><tr><th>段次</th><th>段長 mm</th><th>折角 °</th><th>折彎</th><th></th></tr></thead><tbody id="segmentRows"></tbody></table><div class="buttons"><button class="primary" type="button" id="drawBtn">產生圖形</button><button class="secondary" type="button" id="addRowBtn">新增段次</button><button class="secondary" type="button" id="sampleBtn">套用範例</button><button class="secondary" type="button" id="clearBtn">清除</button></div></div></div>
-<div class="panel drawing"><div class="summary"><div class="metric"><span>總展開長</span><strong id="totalLength">0 mm</strong></div><div class="metric"><span>折彎數</span><strong id="bendCount">0</strong></div><div class="metric"><span>建議 V 開口</span><strong id="vOpen">0 mm</strong></div><div class="metric"><span>整體風險</span><strong id="riskText">-</strong></div></div><svg id="drawingSvg" viewBox="0 0 720 430" role="img" aria-label="折彎圖形"></svg></div></section>
-<section class="steps"><div class="panel"><h2>折彎步驟</h2><table><thead><tr><th>折次</th><th>折角</th><th>左邊長</th><th>右邊長</th><th>短邊</th><th>建議</th><th>結果</th></tr></thead><tbody id="stepRows"></tbody></table></div></section>
-</main>
-<script>
-const tbody=document.querySelector("#segmentRows"),stepRows=document.querySelector("#stepRows"),svg=document.querySelector("#drawingSvg"),thicknessInput=document.querySelector("#thickness"),plateLengthInput=document.querySelector("#plateLength");
-const sampleSegments=[{length:30,angle:0,bend:false},{length:35,angle:90,bend:true},{length:45,angle:-90,bend:true},{length:30,angle:90,bend:true},{length:40,angle:0,bend:false}];
-function normalizeAngle(a){let v=a%360;if(v<0)v+=360;return v}function readNumber(v){const n=Number(v);return Number.isFinite(n)?n:0}
-function addRow(data={length:20,angle:0,bend:false}){const row=document.createElement("tr");row.innerHTML=`<td class="row-no"></td><td><input class="seg-length" type="number" min="0" step="1" value="${data.length}"></td><td><input class="seg-angle" type="number" step="1" value="${data.angle}"></td><td><select class="seg-bend"><option value="yes"${data.bend?" selected":""}>是</option><option value="no"${data.bend?"":" selected"}>否</option></select></td><td><button class="icon-btn" type="button" title="刪除">×</button></td>`;row.querySelector("button").addEventListener("click",()=>{row.remove();renumber();draw()});row.querySelectorAll("input,select").forEach(input=>input.addEventListener("input",draw));tbody.appendChild(row);renumber()}
-function renumber(){[...tbody.querySelectorAll("tr")].forEach((row,i)=>row.querySelector(".row-no").textContent=i+1)}
-function getSegments(){return[...tbody.querySelectorAll("tr")].map(row=>({length:Math.max(0,readNumber(row.querySelector(".seg-length").value)),angle:readNumber(row.querySelector(".seg-angle").value),bend:row.querySelector(".seg-bend").value==="yes"})).filter(s=>s.length>0)}
-function appendRemainingLength(segments){const plateLength=readNumber(plateLengthInput.value),used=segments.reduce((sum,s)=>sum+s.length,0);if(plateLength>used)segments.push({length:plateLength-used,angle:0,bend:false,auto:true});return segments}
-function computePoints(segments){let currentAngle=0,x=0,y=0;const points=[{x,y,angle:0}];segments.forEach((s,i)=>{if(i>0)currentAngle=normalizeAngle(currentAngle+s.angle);const rad=currentAngle*Math.PI/180;x+=s.length*Math.cos(rad);y+=s.length*Math.sin(rad);points.push({x,y,angle:currentAngle})});return points}
-function scalePoints(points){const minX=Math.min(...points.map(p=>p.x)),maxX=Math.max(...points.map(p=>p.x)),minY=Math.min(...points.map(p=>p.y)),maxY=Math.max(...points.map(p=>p.y)),w=Math.max(1,maxX-minX),h=Math.max(1,maxY-minY),m=46,scale=Math.min((720-m*2)/w,(430-m*2)/h);return points.map(p=>({x:m+(p.x-minX)*scale,y:430-m-(p.y-minY)*scale}))}
-function riskClass(shortEdge,minEdge){if(shortEdge<minEdge)return["高","bad"];if(shortEdge<minEdge*1.5)return["中","warn"];return["低","ok"]}
-function draw(){const raw=getSegments(),segments=appendRemainingLength([...raw]),thickness=Math.max(0,readNumber(thicknessInput.value)),minEdge=Math.max(8,thickness*6),points=computePoints(segments),screen=scalePoints(points),bendIndexes=segments.map((segment,index)=>({segment,index})).filter(item=>item.index>0&&(item.segment.bend||item.segment.angle!==0)),totalLength=segments.reduce((sum,s)=>sum+s.length,0),risks=[];svg.innerHTML="";const path=document.createElementNS("http://www.w3.org/2000/svg","polyline");path.setAttribute("points",screen.map(p=>`${p.x},${p.y}`).join(" "));path.setAttribute("fill","none");path.setAttribute("stroke","#176b87");path.setAttribute("stroke-width","7");path.setAttribute("stroke-linecap","round");path.setAttribute("stroke-linejoin","round");svg.appendChild(path);screen.forEach((p,i)=>{const c=document.createElementNS("http://www.w3.org/2000/svg","circle");c.setAttribute("cx",p.x);c.setAttribute("cy",p.y);c.setAttribute("r",i===0||i===screen.length-1?6:5);c.setAttribute("fill",i===0?"#1f8a70":"#fff");c.setAttribute("stroke","#176b87");c.setAttribute("stroke-width","3");svg.appendChild(c)});segments.forEach((s,i)=>{if(i>=screen.length-1)return;const a=screen[i],b=screen[i+1],label=document.createElementNS("http://www.w3.org/2000/svg","text");label.setAttribute("x",(a.x+b.x)/2);label.setAttribute("y",(a.y+b.y)/2-10);label.setAttribute("text-anchor","middle");label.setAttribute("font-size","14");label.setAttribute("font-weight","700");label.setAttribute("fill","#172026");label.textContent=`${s.length}mm${s.auto?" 補長":""}`;svg.appendChild(label)});stepRows.innerHTML="";bendIndexes.forEach((item,bendNo)=>{const leftLen=segments[item.index-1]?.length||0,rightLen=segments[item.index]?.length||0,shortEdge=Math.min(leftLen,rightLen),[risk,cls]=riskClass(shortEdge,minEdge);risks.push(risk);const suggestion=item.segment.angle>0?"向上折":item.segment.angle<0?"向下折":"確認角度",row=document.createElement("tr");row.innerHTML=`<td>第 ${bendNo+1} 折</td><td>${item.segment.angle}°</td><td>${leftLen} mm</td><td>${rightLen} mm</td><td>${shortEdge} mm</td><td>${suggestion}</td><td class="${cls}">${risk==="高"?"短邊不足，需注意":risk==="中"?"可試作，需確認模具":"可製作"}</td>`;stepRows.appendChild(row);const p=screen[item.index],mark=document.createElementNS("http://www.w3.org/2000/svg","text");mark.setAttribute("x",p.x+10);mark.setAttribute("y",p.y-10);mark.setAttribute("font-size","14");mark.setAttribute("font-weight","900");mark.setAttribute("fill",cls==="bad"?"#b42318":cls==="warn"?"#a35d00":"#1f8a70");mark.textContent=`折${bendNo+1}`;svg.appendChild(mark)});if(bendIndexes.length===0)stepRows.innerHTML='<tr><td colspan="7">目前沒有折彎角度，請至少在第 2 段之後輸入折角。</td></tr>';document.querySelector("#totalLength").textContent=`${Math.round(totalLength*100)/100} mm`;document.querySelector("#bendCount").textContent=bendIndexes.length;document.querySelector("#vOpen").textContent=`${minEdge} mm`;const overall=risks.includes("高")?["高","bad"]:risks.includes("中")?["中","warn"]:["低","ok"];document.querySelector("#riskText").innerHTML=`<span class="${overall[1]}">${overall[0]}</span>`}
-function loadSample(){tbody.innerHTML="";sampleSegments.forEach(addRow);plateLengthInput.value=200;thicknessInput.value=2;draw()}
-document.querySelector("#drawBtn").addEventListener("click",draw);document.querySelector("#addRowBtn").addEventListener("click",()=>{addRow();draw()});document.querySelector("#sampleBtn").addEventListener("click",loadSample);document.querySelector("#clearBtn").addEventListener("click",()=>{tbody.innerHTML="";addRow({length:20,angle:0,bend:false});addRow({length:20,angle:90,bend:true});draw()});thicknessInput.addEventListener("input",draw);plateLengthInput.addEventListener("input",draw);loadSample();
-</script></body></html>
+<body>
+  <main>
+    <header>
+      <div>
+        <h1>折彎機圖形與步驟產生器</h1>
+        <p>左邊輸入每段長度與折角，右邊即時產生折彎形狀，下方列出折彎順序、左右邊長、短邊與風險提示。</p>
+      </div>
+      <div class="tag">Excel VBA 轉網頁作品</div>
+    </header>
+
+    <section class="layout">
+      <div class="panel">
+        <h2>輸入資料</h2>
+        <div class="controls">
+          <div class="basic">
+            <label>
+              板厚 mm
+              <span class="hint">用來估算 V 開口與最短折邊</span>
+              <input id="thickness" type="number" min="0.1" step="0.1" value="2">
+            </label>
+            <label>
+              板長 mm
+              <span class="hint">留空或 0 時自動用段長總和</span>
+              <input id="plateLength" type="number" min="0" step="1" value="200">
+            </label>
+          </div>
+
+          <table aria-label="折彎段資料">
+            <thead>
+              <tr>
+                <th>段次</th>
+                <th>段長 mm</th>
+                <th>折角 °</th>
+                <th>折彎</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody id="segmentRows"></tbody>
+          </table>
+
+          <div class="buttons">
+            <button class="primary" type="button" id="drawBtn">產生圖形</button>
+            <button class="secondary" type="button" id="addRowBtn">新增段次</button>
+            <button class="secondary" type="button" id="sampleBtn">套用範例</button>
+            <button class="secondary" type="button" id="clearBtn">清除</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="panel drawing">
+        <div class="summary">
+          <div class="metric"><span>總展開長</span><strong id="totalLength">0 mm</strong></div>
+          <div class="metric"><span>折彎數</span><strong id="bendCount">0</strong></div>
+          <div class="metric"><span>建議 V 開口</span><strong id="vOpen">0 mm</strong></div>
+          <div class="metric"><span>整體風險</span><strong id="riskText">-</strong></div>
+        </div>
+        <svg id="drawingSvg" viewBox="0 0 720 430" role="img" aria-label="折彎圖形"></svg>
+      </div>
+    </section>
+
+    <section class="steps">
+      <div class="panel">
+        <h2>折彎步驟</h2>
+        <table>
+          <thead>
+            <tr>
+              <th>折次</th>
+              <th>折角</th>
+              <th>左邊長</th>
+              <th>右邊長</th>
+              <th>短邊</th>
+              <th>建議</th>
+              <th>結果</th>
+            </tr>
+          </thead>
+          <tbody id="stepRows"></tbody>
+        </table>
+        <div class="tool-panels" id="toolPanels"></div>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    const tbody = document.querySelector("#segmentRows");
+    const stepRows = document.querySelector("#stepRows");
+    const toolPanels = document.querySelector("#toolPanels");
+    const svg = document.querySelector("#drawingSvg");
+    const thicknessInput = document.querySelector("#thickness");
+    const plateLengthInput = document.querySelector("#plateLength");
+
+    const sampleSegments = [
+      { length: 30, angle: 0, bend: false },
+      { length: 35, angle: 90, bend: true },
+      { length: 45, angle: -90, bend: true },
+      { length: 30, angle: 90, bend: true },
+      { length: 40, angle: 0, bend: false }
+    ];
+
+    function normalizeAngle(angle) {
+      let value = angle % 360;
+      if (value < 0) value += 360;
+      return value;
+    }
+
+    function readNumber(value) {
+      const number = Number(value);
+      return Number.isFinite(number) ? number : 0;
+    }
+
+    function addRow(data = { length: 20, angle: 0, bend: false }) {
+      const row = document.createElement("tr");
+      row.innerHTML = `
+        <td class="row-no"></td>
+        <td><input class="seg-length" type="number" min="0" step="1" value="${data.length}"></td>
+        <td><input class="seg-angle" type="number" step="1" value="${data.angle}"></td>
+        <td>
+          <select class="seg-bend">
+            <option value="yes"${data.bend ? " selected" : ""}>是</option>
+            <option value="no"${data.bend ? "" : " selected"}>否</option>
+          </select>
+        </td>
+        <td><button class="icon-btn" type="button" title="刪除">×</button></td>
+      `;
+      row.querySelector("button").addEventListener("click", () => {
+        row.remove();
+        renumber();
+        draw();
+      });
+      row.querySelectorAll("input,select").forEach(input => input.addEventListener("input", draw));
+      tbody.appendChild(row);
+      renumber();
+    }
+
+    function renumber() {
+      [...tbody.querySelectorAll("tr")].forEach((row, index) => {
+        row.querySelector(".row-no").textContent = index + 1;
+      });
+    }
+
+    function getSegments() {
+      return [...tbody.querySelectorAll("tr")]
+        .map(row => ({
+          length: Math.max(0, readNumber(row.querySelector(".seg-length").value)),
+          angle: readNumber(row.querySelector(".seg-angle").value),
+          bend: row.querySelector(".seg-bend").value === "yes"
+        }))
+        .filter(segment => segment.length > 0);
+    }
+
+    function appendRemainingLength(segments) {
+      const plateLength = readNumber(plateLengthInput.value);
+      const used = segments.reduce((sum, segment) => sum + segment.length, 0);
+      if (plateLength > used) {
+        segments.push({ length: plateLength - used, angle: 0, bend: false, auto: true });
+      }
+      return segments;
+    }
+
+    function computePoints(segments) {
+      let currentAngle = 0;
+      let x = 0;
+      let y = 0;
+      const points = [{ x, y, angle: 0 }];
+
+      segments.forEach((segment, index) => {
+        if (index > 0) currentAngle = normalizeAngle(currentAngle + segment.angle);
+        const rad = currentAngle * Math.PI / 180;
+        x += segment.length * Math.cos(rad);
+        y += segment.length * Math.sin(rad);
+        points.push({ x, y, angle: currentAngle });
+      });
+
+      return points;
+    }
+
+    function scalePoints(points) {
+      const minX = Math.min(...points.map(point => point.x));
+      const maxX = Math.max(...points.map(point => point.x));
+      const minY = Math.min(...points.map(point => point.y));
+      const maxY = Math.max(...points.map(point => point.y));
+      const width = Math.max(1, maxX - minX);
+      const height = Math.max(1, maxY - minY);
+      const margin = 46;
+      const scale = Math.min((720 - margin * 2) / width, (430 - margin * 2) / height);
+
+      return points.map(point => ({
+        x: margin + (point.x - minX) * scale,
+        y: 430 - margin - (point.y - minY) * scale
+      }));
+    }
+
+    function riskClass(shortEdge, minEdge) {
+      if (shortEdge < minEdge) return ["高", "bad"];
+      if (shortEdge < minEdge * 1.5) return ["中", "warn"];
+      return ["低", "ok"];
+    }
+
+    function makeToolStepSvg(stepNo, angle, leftLen, rightLen, shortEdge, cls) {
+      const centerX = 210;
+      const bendY = 118;
+      const scale = Math.min(2.2, 130 / Math.max(leftLen, rightLen, 1));
+      const leftX = centerX - Math.max(34, leftLen * scale);
+      const rightRad = -angle * Math.PI / 180;
+      const rightX = centerX + Math.max(34, rightLen * scale) * Math.cos(rightRad);
+      const rightY = bendY + Math.max(34, rightLen * scale) * Math.sin(rightRad);
+      const color = cls === "bad" ? "#b42318" : cls === "warn" ? "#a35d00" : "#176b87";
+      const resultText = cls === "bad" ? "短邊不足" : cls === "warn" ? "需確認模具" : "可製作";
+
+      return `
+        <svg viewBox="0 0 420 220" role="img" aria-label="第 ${stepNo} 折刀具示意圖">
+          <defs>
+            <marker id="arrow-${stepNo}" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+              <path d="M0,0 L6,3 L0,6 Z" fill="#64717a"></path>
+            </marker>
+          </defs>
+          <text x="16" y="26" font-size="14" font-weight="800" fill="#172026">第 ${stepNo} 折：${angle}°</text>
+          <text x="16" y="48" font-size="12" fill="#64717a">短邊 ${shortEdge} mm｜${resultText}</text>
+
+          <path d="M${centerX - 26},18 L${centerX},90 L${centerX + 26},18" fill="none" stroke="#475569" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"></path>
+          <text x="${centerX + 34}" y="42" font-size="12" fill="#64717a">上刀</text>
+          <line x1="${centerX}" y1="84" x2="${centerX}" y2="${bendY - 8}" stroke="#64717a" stroke-width="2" stroke-dasharray="5 4" marker-end="url(#arrow-${stepNo})"></line>
+
+          <path d="M${centerX - 58},188 L${centerX},130 L${centerX + 58},188" fill="none" stroke="#334155" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"></path>
+          <text x="${centerX + 66}" y="178" font-size="12" fill="#64717a">V 模</text>
+
+          <line x1="${leftX}" y1="${bendY}" x2="${centerX}" y2="${bendY}" stroke="${color}" stroke-width="8" stroke-linecap="round"></line>
+          <line x1="${centerX}" y1="${bendY}" x2="${rightX}" y2="${rightY}" stroke="${color}" stroke-width="8" stroke-linecap="round"></line>
+          <circle cx="${centerX}" cy="${bendY}" r="7" fill="#fff" stroke="${color}" stroke-width="4"></circle>
+          <text x="${(leftX + centerX) / 2}" y="${bendY - 14}" text-anchor="middle" font-size="12" font-weight="800" fill="#172026">${leftLen}mm</text>
+          <text x="${(rightX + centerX) / 2}" y="${(rightY + bendY) / 2 - 14}" text-anchor="middle" font-size="12" font-weight="800" fill="#172026">${rightLen}mm</text>
+          <path d="M${centerX + 28},${bendY} A28,28 0 0 ${angle < 0 ? 1 : 0} ${centerX + 28 * Math.cos(rightRad)},${bendY + 28 * Math.sin(rightRad)}" fill="none" stroke="#64717a" stroke-width="2"></path>
+        </svg>
+      `;
+    }
+
+    function draw() {
+      const rawSegments = getSegments();
+      const segments = appendRemainingLength([...rawSegments]);
+      const thickness = Math.max(0, readNumber(thicknessInput.value));
+      const minEdge = Math.max(8, thickness * 6);
+      const points = computePoints(segments);
+      const screen = scalePoints(points);
+      const bendIndexes = segments
+        .map((segment, index) => ({ segment, index }))
+        .filter(item => item.index > 0 && (item.segment.bend || item.segment.angle !== 0));
+
+      const totalLength = segments.reduce((sum, segment) => sum + segment.length, 0);
+      const risks = [];
+
+      svg.innerHTML = "";
+      const path = document.createElementNS("http://www.w3.org/2000/svg", "polyline");
+      path.setAttribute("points", screen.map(point => `${point.x},${point.y}`).join(" "));
+      path.setAttribute("fill", "none");
+      path.setAttribute("stroke", "#176b87");
+      path.setAttribute("stroke-width", "7");
+      path.setAttribute("stroke-linecap", "round");
+      path.setAttribute("stroke-linejoin", "round");
+      svg.appendChild(path);
+
+      screen.forEach((point, index) => {
+        const circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+        circle.setAttribute("cx", point.x);
+        circle.setAttribute("cy", point.y);
+        circle.setAttribute("r", index === 0 || index === screen.length - 1 ? 6 : 5);
+        circle.setAttribute("fill", index === 0 ? "#1f8a70" : "#ffffff");
+        circle.setAttribute("stroke", "#176b87");
+        circle.setAttribute("stroke-width", "3");
+        svg.appendChild(circle);
+      });
+
+      segments.forEach((segment, index) => {
+        if (index >= screen.length - 1) return;
+        const a = screen[index];
+        const b = screen[index + 1];
+        const label = document.createElementNS("http://www.w3.org/2000/svg", "text");
+        label.setAttribute("x", (a.x + b.x) / 2);
+        label.setAttribute("y", (a.y + b.y) / 2 - 10);
+        label.setAttribute("text-anchor", "middle");
+        label.setAttribute("font-size", "14");
+        label.setAttribute("font-weight", "700");
+        label.setAttribute("fill", "#172026");
+        label.textContent = `${segment.length}mm${segment.auto ? " 補長" : ""}`;
+        svg.appendChild(label);
+      });
+
+      stepRows.innerHTML = "";
+      toolPanels.innerHTML = "";
+      bendIndexes.forEach((item, bendNo) => {
+        const leftLen = segments[item.index - 1]?.length || 0;
+        const rightLen = segments[item.index]?.length || 0;
+        const shortEdge = Math.min(leftLen, rightLen);
+        const [risk, cls] = riskClass(shortEdge, minEdge);
+        risks.push(risk);
+        const suggestion = item.segment.angle > 0 ? "向上折" : item.segment.angle < 0 ? "向下折" : "確認角度";
+        const row = document.createElement("tr");
+        row.innerHTML = `
+          <td>第 ${bendNo + 1} 折</td>
+          <td>${item.segment.angle}°</td>
+          <td>${leftLen} mm</td>
+          <td>${rightLen} mm</td>
+          <td>${shortEdge} mm</td>
+          <td>${suggestion}</td>
+          <td class="${cls}">${risk === "高" ? "短邊不足，需注意" : risk === "中" ? "可試作，需確認模具" : "可製作"}</td>
+        `;
+        stepRows.appendChild(row);
+
+        const card = document.createElement("article");
+        card.className = "step-card";
+        card.innerHTML = `
+          <h3>第 ${bendNo + 1} 折刀具步驟圖</h3>
+          ${makeToolStepSvg(bendNo + 1, item.segment.angle, leftLen, rightLen, shortEdge, cls)}
+        `;
+        toolPanels.appendChild(card);
+
+        const point = screen[item.index];
+        const mark = document.createElementNS("http://www.w3.org/2000/svg", "text");
+        mark.setAttribute("x", point.x + 10);
+        mark.setAttribute("y", point.y - 10);
+        mark.setAttribute("font-size", "14");
+        mark.setAttribute("font-weight", "900");
+        mark.setAttribute("fill", cls === "bad" ? "#b42318" : cls === "warn" ? "#a35d00" : "#1f8a70");
+        mark.textContent = `折${bendNo + 1}`;
+        svg.appendChild(mark);
+      });
+
+      if (bendIndexes.length === 0) {
+        stepRows.innerHTML = '<tr><td colspan="7">目前沒有折彎角度，請至少在第 2 段之後輸入折角。</td></tr>';
+        toolPanels.innerHTML = "";
+      }
+
+      document.querySelector("#totalLength").textContent = `${Math.round(totalLength * 100) / 100} mm`;
+      document.querySelector("#bendCount").textContent = bendIndexes.length;
+      document.querySelector("#vOpen").textContent = `${minEdge} mm`;
+      const overallRisk = risks.includes("高") ? ["高", "bad"] : risks.includes("中") ? ["中", "warn"] : ["低", "ok"];
+      document.querySelector("#riskText").innerHTML = `<span class="${overallRisk[1]}">${overallRisk[0]}</span>`;
+    }
+
+    function loadSample() {
+      tbody.innerHTML = "";
+      sampleSegments.forEach(addRow);
+      plateLengthInput.value = 200;
+      thicknessInput.value = 2;
+      draw();
+    }
+
+    document.querySelector("#drawBtn").addEventListener("click", draw);
+    document.querySelector("#addRowBtn").addEventListener("click", () => {
+      addRow();
+      draw();
+    });
+    document.querySelector("#sampleBtn").addEventListener("click", loadSample);
+    document.querySelector("#clearBtn").addEventListener("click", () => {
+      tbody.innerHTML = "";
+      addRow({ length: 20, angle: 0, bend: false });
+      addRow({ length: 20, angle: 90, bend: true });
+      draw();
+    });
+    thicknessInput.addEventListener("input", draw);
+    plateLengthInput.addEventListener("input", draw);
+
+    loadSample();
+  </script>
+</body>
+</html>
