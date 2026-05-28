@@ -302,6 +302,13 @@
       { length: 30, angle: 90, bend: true }
     ];
 
+    const tools = [
+      { code: "D01", type: "直刀", v: 12, tMin: 1, tMax: 2, minFlange: 15, height: 100, throat: 0 },
+      { code: "D02", type: "直刀", v: 18, tMin: 2, tMax: 3, minFlange: 20, height: 110, throat: 0 },
+      { code: "G01", type: "彎刀", v: 18, tMin: 2, tMax: 3, minFlange: 8, height: 120, throat: 30 },
+      { code: "G02", type: "彎刀", v: 24, tMin: 3, tMax: 5, minFlange: 10, height: 130, throat: 40 }
+    ];
+
     function n(value) {
       const parsed = Number(value);
       return Number.isFinite(parsed) ? parsed : 0;
@@ -403,9 +410,12 @@
       };
     }
 
-    function transformPlateToFixedTool(points, bendPoint, toolAngle) {
-      const rotateAngle = normalize(270 - toolAngle);
-      return points.map(point => rotatePoint(point.x - bendPoint.x, point.y - bendPoint.y, rotateAngle));
+    function transformPlateToFixedTool(points, bendPoint, toolAngle, needsFlip = false) {
+      const rotateAngle = needsFlip ? normalize(270 - normalize(360 - toolAngle)) : normalize(270 - toolAngle);
+      return points.map(point => {
+        const localY = needsFlip ? -(point.y - bendPoint.y) : point.y - bendPoint.y;
+        return rotatePoint(point.x - bendPoint.x, localY, rotateAngle);
+      });
     }
 
     function fit(points, width, height, margin, anchorIndex = null, anchorX = null, anchorY = null) {
@@ -444,11 +454,197 @@
       return y >= top && y <= bottom;
     }
 
-    function fitMachine(points, width, height, bendX, bendY, minToolHeight = 84) {
-      let minX = Math.min(...points.map(p => p.x));
-      let maxX = Math.max(...points.map(p => p.x));
-      let minY = Math.min(...points.map(p => p.y));
-      let maxY = Math.max(...points.map(p => p.y));
+    function direction(a, b, c) {
+      return (c.x - a.x) * (b.y - a.y) - (c.y - a.y) * (b.x - a.x);
+    }
+
+    function pointOnSegment(a, b, p) {
+      return Math.abs(direction(a, b, p)) <= 0.000001
+        && p.x >= Math.min(a.x, b.x) - 0.000001
+        && p.x <= Math.max(a.x, b.x) + 0.000001
+        && p.y >= Math.min(a.y, b.y) - 0.000001
+        && p.y <= Math.max(a.y, b.y) + 0.000001;
+    }
+
+    function linesIntersect(a, b, c, d, inclusive = false) {
+      const d1 = direction(c, d, a);
+      const d2 = direction(c, d, b);
+      const d3 = direction(a, b, c);
+      const d4 = direction(a, b, d);
+      if (((d1 > 0 && d2 < 0) || (d1 < 0 && d2 > 0)) && ((d3 > 0 && d4 < 0) || (d3 < 0 && d4 > 0))) return true;
+      if (!inclusive) return false;
+      return (Math.abs(d1) <= 0.000001 && pointOnSegment(c, d, a))
+        || (Math.abs(d2) <= 0.000001 && pointOnSegment(c, d, b))
+        || (Math.abs(d3) <= 0.000001 && pointOnSegment(a, b, c))
+        || (Math.abs(d4) <= 0.000001 && pointOnSegment(a, b, d));
+    }
+
+    function samePoint(a, b) {
+      return Math.hypot(a.x - b.x, a.y - b.y) < 0.000001;
+    }
+
+    function toolSegmentHitsPlateSegment(a, b, c, d, bend) {
+      if (!linesIntersect(a, b, c, d, true)) return false;
+      const plateHasBend = pointOnSegment(a, b, bend);
+      const toolHasBend = pointOnSegment(c, d, bend);
+      if (plateHasBend && toolHasBend) {
+        const plateOtherOnTool = (!samePoint(a, bend) && pointOnSegment(c, d, a)) || (!samePoint(b, bend) && pointOnSegment(c, d, b));
+        const toolOtherOnPlate = (!samePoint(c, bend) && pointOnSegment(a, b, c)) || (!samePoint(d, bend) && pointOnSegment(a, b, d));
+        if (!plateOtherOnTool && !toolOtherOnPlate) return false;
+      }
+      return true;
+    }
+
+    function checkPlateSelfIntersection(points) {
+      for (let i = 1; i < points.length - 1; i += 1) {
+        for (let j = i + 2; j < points.length; j += 1) {
+          if (i === 1 && j === points.length - 1) continue;
+          if (linesIntersect(points[i - 1], points[i], points[j - 1], points[j])) return true;
+        }
+      }
+      return false;
+    }
+
+    function checkToolActionLineHit(points, toolHeight) {
+      const bend = { x: 0, y: 0 };
+      const toolEnd = { x: 0, y: -(toolHeight + 10000) };
+      return points.some((point, index) => index > 0 && toolSegmentHitsPlateSegment(points[index - 1], point, bend, toolEnd, bend));
+    }
+
+    function goosePoints(tool, throatSide = 1) {
+      const height = tool.height || 100;
+      const throat = tool.throat || 30;
+      const tipBack = Math.max(height * 0.14, 14);
+      const tipOffset = Math.min(Math.max(throat * 0.18, 8), height * 0.22);
+      const lowerBody = Math.max(height * 0.44, 38);
+      const shoulderBack = Math.min(Math.max(height * 0.18, 16), height * 0.26);
+      const shoulderOffset = Math.min(Math.max(throat * 0.34, 18), height * 0.38);
+      const upperBody = Math.max(height * 0.42, 38);
+      const ux = 0;
+      const uy = -1;
+      const sx = 1 * throatSide;
+      const sy = 0;
+      const p1 = { x: 0, y: 0 };
+      const p2 = { x: p1.x + ux * tipBack - sx * tipOffset, y: p1.y + uy * tipBack - sy * tipOffset };
+      const p3 = { x: p2.x + ux * lowerBody, y: p2.y + uy * lowerBody };
+      const p4 = { x: p3.x + ux * shoulderBack + sx * shoulderOffset, y: p3.y + uy * shoulderBack + sy * shoulderOffset };
+      const p5 = { x: p4.x + ux * upperBody, y: p4.y + uy * upperBody };
+      const p6 = { x: p5.x, y: p5.y - 10000 };
+      return [p1, p2, p3, p4, p5, p6];
+    }
+
+    function checkGooseToolBodyHit(points, tool, throatSide = 1) {
+      const bend = { x: 0, y: 0 };
+      const gp = goosePoints(tool, throatSide);
+      for (let i = 1; i < points.length; i += 1) {
+        for (let j = 1; j < gp.length; j += 1) {
+          if (toolSegmentHitsPlateSegment(points[i - 1], points[i], gp[j - 1], gp[j], bend)) return true;
+        }
+      }
+      return false;
+    }
+
+    function countFolded(folded) {
+      return folded.size;
+    }
+
+    function stepToolEdge(segments, activeIndex, foldNo) {
+      const rightLen = segments[activeIndex]?.length || 0;
+      const leftLen = activeIndex > 0 ? segments[activeIndex - 1].length : 0;
+      if (foldNo <= 1 && rightLen > 0) return rightLen;
+      if (leftLen <= 0) return rightLen;
+      if (rightLen <= 0) return leftLen;
+      return Math.min(leftLen, rightLen);
+    }
+
+    function angleDiff(a1, a2) {
+      let diff = Math.abs(normalize(a1) - normalize(a2));
+      if (diff > 180) diff = 360 - diff;
+      return diff;
+    }
+
+    function isInnerByAngles(absAngles, bendCount) {
+      if (bendCount < 3) return false;
+      for (let i = 2; i < absAngles.length; i += 1) {
+        if (angleDiff(absAngles[i], absAngles[i - 2]) > 140) return true;
+      }
+      return false;
+    }
+
+    function partHeight(points) {
+      return Math.abs(Math.max(...points.map(p => p.y)) - Math.min(...points.map(p => p.y)));
+    }
+
+    function riskText(thick, minEdge, isInner) {
+      if (minEdge === 0) return "資料不足";
+      if (minEdge < thick * 2.5) return "高";
+      if (isInner && minEdge < thick * 4) return "中";
+      if (minEdge < thick * 4) return "中";
+      return "低";
+    }
+
+    function bestToolByType(thick, minEdge, height, targetType) {
+      let best = null;
+      let bestScore = Infinity;
+      tools.forEach(tool => {
+        if (tool.type !== targetType) return;
+        if (thick < tool.tMin || thick > tool.tMax) return;
+        if (targetType !== "直刀" && minEdge < tool.minFlange) return;
+        if (targetType === "彎刀" && (tool.throat <= 0 || minEdge > tool.throat)) return;
+        let score = Math.abs(((tool.tMin + tool.tMax) / 2) - thick) * 10 + Math.abs(tool.minFlange - minEdge) * 0.5 + tool.v * 0.1;
+        if (targetType === "直刀" && minEdge < tool.minFlange) score += (tool.minFlange - minEdge) * 2;
+        if (targetType === "彎刀") score -= tool.throat * 0.5;
+        if (score < bestScore) {
+          best = tool;
+          bestScore = score;
+        }
+      });
+      return best;
+    }
+
+    function evaluateStep(segments, folded, activeIndex, thick, excelSequentialFoldNo = null) {
+      const absAngles = absoluteAnglesFor(segments, folded);
+      const raw = pointsFor(segments, folded);
+      const foldNo = countFolded(folded);
+      const minEdge = stepToolEdge(segments, activeIndex, excelSequentialFoldNo ?? foldNo);
+      const inner = isInnerByAngles(absAngles, foldNo);
+      const risk = riskText(thick, minEdge, inner);
+
+      if (checkPlateSelfIntersection(raw)) {
+        return { ok: false, minEdge, risk: "高", tool: null, toolType: "不可", result: "不可製作：板件自交/封閉", needsFlip: false, throatSide: 1, raw, absAngles };
+      }
+
+      const bendPoint = raw[activeIndex];
+      const toolAngle = toolAngleByCurrentSegment(absAngles[activeIndex], segments[activeIndex].angle);
+      const machine = transformPlateToFixedTool(raw, bendPoint, toolAngle, false);
+      const flipMachine = transformPlateToFixedTool(raw, bendPoint, toolAngle, true);
+      const straight = bestToolByType(thick, minEdge, partHeight(raw), "直刀");
+      const goose = bestToolByType(thick, minEdge, partHeight(raw), "彎刀");
+
+      if (straight) {
+        const straightOK = !checkToolActionLineHit(machine, straight.height);
+        const straightFlipOK = !checkToolActionLineHit(flipMachine, straight.height);
+        if (straightOK) return { ok: true, minEdge, risk: "低", tool: straight, toolType: "直刀", result: "可製作", needsFlip: false, throatSide: 1, raw, absAngles };
+        if (straightFlipOK) return { ok: true, minEdge, risk: "中", tool: straight, toolType: "直刀", result: "可製作：需翻面", needsFlip: true, throatSide: 1, raw, absAngles };
+      }
+
+      if (goose) {
+        if (!checkGooseToolBodyHit(machine, goose, 1)) return { ok: true, minEdge, risk: "中", tool: goose, toolType: "彎刀", result: "可試作", needsFlip: false, throatSide: 1, raw, absAngles };
+        if (!checkGooseToolBodyHit(machine, goose, -1)) return { ok: true, minEdge, risk: "中", tool: goose, toolType: "彎刀", result: "可製作：反向彎刀", needsFlip: false, throatSide: -1, raw, absAngles };
+        if (!checkGooseToolBodyHit(flipMachine, goose, -1)) return { ok: true, minEdge, risk: "中", tool: goose, toolType: "彎刀", result: "可製作：需翻面", needsFlip: true, throatSide: -1, raw, absAngles };
+        if (!checkGooseToolBodyHit(flipMachine, goose, 1)) return { ok: true, minEdge, risk: "中", tool: goose, toolType: "彎刀", result: "可製作：需翻面/反向彎刀", needsFlip: true, throatSide: 1, raw, absAngles };
+      }
+
+      if (!straight && !goose) return { ok: false, minEdge, risk: "高", tool: null, toolType: "無", result: "無可用刀具", needsFlip: false, throatSide: 1, raw, absAngles };
+      return { ok: false, minEdge, risk: "高", tool: null, toolType: "不可", result: "不可製作：卡刀", needsFlip: false, throatSide: 1, raw, absAngles };
+    }
+
+    function machineViewport(points, width, height, bendX, bendY, minToolHeight = 84, extraToolPoints = []) {
+      const allPoints = [...points, ...extraToolPoints];
+      let minX = Math.min(...allPoints.map(p => p.x));
+      let maxX = Math.max(...allPoints.map(p => p.x));
+      let minY = Math.min(...allPoints.map(p => p.y));
+      let maxY = Math.max(...allPoints.map(p => p.y));
       const margin = 18;
       minY = Math.min(minY, -minToolHeight);
 
@@ -463,13 +659,15 @@
       if (maxDown > 0) scales.push((height - margin - bendY) / maxDown);
       const scale = Math.max(0.1, Math.min(...scales.filter(value => Number.isFinite(value) && value > 0)));
 
-      return points.map(point => ({
-        x: bendX + point.x * scale,
-        y: bendY + point.y * scale
-      }));
+      const toScreen = point => ({ x: bendX + point.x * scale, y: bendY + point.y * scale });
+      return { points: points.map(toScreen), toScreen, scale };
     }
 
-    function cardSvg(step, bendIndex, segments, folded, shortEdge, minEdge) {
+    function fitMachine(points, width, height, bendX, bendY, minToolHeight = 84) {
+      return machineViewport(points, width, height, bendX, bendY, minToolHeight).points;
+    }
+
+    function cardSvg(step, bendIndex, segments, folded, evalInfo) {
       const width = 520;
       const height = 300;
       const toolX = 260;
@@ -480,15 +678,12 @@
       const raw = pointsFor(segments, folded);
       const bendPoint = raw[bendIndex];
       const toolAngle = toolAngleByCurrentSegment(absAngles[bendIndex], segments[bendIndex].angle);
-      const machine = transformPlateToFixedTool(raw, bendPoint, toolAngle);
-      const pts = fitMachine(machine, width, height, toolX, bendY);
-      const hit = pts.some((p, i) => {
-        if (i === 0) return false;
-        if (i - 1 === bendIndex || i - 1 === bendIndex - 1) return false;
-        return segmentHitsTool(pts[i - 1], p, toolX, toolTop, toolBottom);
-      });
-      const ok = !hit && shortEdge >= minEdge;
-      const toolCode = shortEdge < 12 ? "D01" : "D02";
+      const machine = transformPlateToFixedTool(raw, bendPoint, toolAngle, evalInfo.needsFlip);
+      const tool = evalInfo.tool || { code: "-", type: "直刀", height: 100, throat: 0 };
+      const goose = tool.type === "彎刀" ? goosePoints(tool, evalInfo.throatSide) : [];
+      const view = machineViewport(machine, width, height, toolX, bendY, tool.height * 1.05, goose.slice(0, 5));
+      const pts = view.points;
+      const ok = evalInfo.ok;
       const labels = segments.map((seg, i) => {
         const a = pts[i];
         const b = pts[i + 1];
@@ -502,14 +697,20 @@
       return `
         <svg viewBox="0 0 ${width} ${height}">
           <rect x="0" y="0" width="${width}" height="${height}" fill="#fff"></rect>
-          <text x="18" y="32" font-size="18" font-weight="900">步驟 ${step}：第${step}折　直刀 / ${toolCode}</text>
-          <text x="18" y="66" font-size="15" fill="#647280">短邊 ${shortEdge} mm｜<tspan class="${ok ? "ok" : "bad"}">${ok ? "不卡刀" : "卡刀或短邊不足"}</tspan></text>
+          <text x="18" y="32" font-size="18" font-weight="900">步驟 ${step}：第${step}折　${tool.type} / ${tool.code}</text>
+          <text x="18" y="66" font-size="15" fill="#647280">短邊 ${evalInfo.minEdge} mm｜<tspan class="${ok ? "ok" : "bad"}">${evalInfo.result}</tspan></text>
           <text x="${toolX + 16}" y="60" font-size="14" font-weight="900" fill="var(--knife)">T100${step}</text>
-          <line x1="${toolX}" y1="${toolTop}" x2="${toolX}" y2="${toolBottom}" stroke="var(--knife)" stroke-width="2" stroke-dasharray="8 6"></line>
+          ${tool.type === "彎刀"
+            ? goose.slice(1, 5).map((p, i) => {
+              const a = view.toScreen(goose[i]);
+              const b = view.toScreen(p);
+              return `<line x1="${a.x}" y1="${a.y}" x2="${b.x}" y2="${b.y}" stroke="var(--knife)" stroke-width="2" stroke-dasharray="8 6"></line>`;
+            }).join("") + `<line x1="${view.toScreen(goose[4]).x}" y1="${view.toScreen(goose[4]).y}" x2="${view.toScreen({ x: goose[4].x, y: -160 }).x}" y2="${toolTop}" stroke="var(--knife)" stroke-width="2" stroke-dasharray="8 6"></line>`
+            : `<line x1="${toolX}" y1="${toolTop}" x2="${toolX}" y2="${toolBottom}" stroke="var(--knife)" stroke-width="2" stroke-dasharray="8 6"></line>`}
           <polyline points="${poly(pts)}" fill="none" stroke="var(--blue)" stroke-width="4"></polyline>
           ${labels}
           ${nodes}
-          ${hit ? `<circle cx="${toolX}" cy="${bendY - 48}" r="8" fill="var(--bad)"></circle><text x="${toolX + 13}" y="${bendY - 43}" font-size="14" font-weight="900" fill="var(--bad)">卡刀</text>` : ""}
+          ${!ok ? `<circle cx="${toolX}" cy="${bendY - 48}" r="8" fill="var(--bad)"></circle><text x="${toolX + 13}" y="${bendY - 43}" font-size="14" font-weight="900" fill="var(--bad)">卡刀</text>` : ""}
         </svg>
       `;
     }
@@ -543,10 +744,10 @@
       const folded = new Set();
       bendIndexes.forEach((item, i) => {
         folded.add(item.i);
-        const shortEdge = Math.min(segments[item.i - 1]?.length || 0, segments[item.i]?.length || 0);
+        const evalInfo = evaluateStep(segments, folded, item.i, n(thickness.value), i);
         const article = document.createElement("article");
         article.className = "card";
-        article.innerHTML = `<h3>第 ${i + 1} 折刀具步驟圖</h3>${cardSvg(i + 1, item.i, segments, folded, shortEdge, minEdgeValue)}`;
+        article.innerHTML = `<h3>第 ${i + 1} 折刀具步驟圖</h3>${cardSvg(i + 1, item.i, segments, folded, evalInfo)}`;
         cards.appendChild(article);
       });
     }
