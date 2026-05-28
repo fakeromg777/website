@@ -639,6 +639,50 @@
       return { ok: false, minEdge, risk: "高", tool: null, toolType: "不可", result: "不可製作：卡刀", needsFlip: false, throatSide: 1, raw, absAngles };
     }
 
+    function bendNoForIndex(bendIndexes, bendIndex) {
+      return bendIndexes.findIndex(item => item.i === bendIndex) + 1;
+    }
+
+    function evaluateOrder(segments, order, thick) {
+      const folded = new Set();
+      return order.map((bendIndex, stepIndex) => {
+        folded.add(bendIndex);
+        return {
+          bendIndex,
+          folded: new Set(folded),
+          evalInfo: evaluateStep(segments, folded, bendIndex, thick, stepIndex)
+        };
+      });
+    }
+
+    function findSuggestedOrder(segments, bendIndexes, thick) {
+      if (bendIndexes.length <= 1 || bendIndexes.length > 8) return null;
+      const candidates = bendIndexes.map(item => item.i);
+      const used = new Set();
+      const folded = new Set();
+      const order = [];
+
+      function search(depth) {
+        if (depth === candidates.length) return true;
+        for (const bendIndex of candidates) {
+          if (used.has(bendIndex)) continue;
+          used.add(bendIndex);
+          folded.add(bendIndex);
+          const evalInfo = evaluateStep(segments, folded, bendIndex, thick, depth);
+          if (evalInfo.ok) {
+            order.push(bendIndex);
+            if (search(depth + 1)) return true;
+            order.pop();
+          }
+          folded.delete(bendIndex);
+          used.delete(bendIndex);
+        }
+        return false;
+      }
+
+      return search(0) ? [...order] : null;
+    }
+
     function machineViewport(points, width, height, bendX, bendY, minToolHeight = 84, extraToolPoints = []) {
       const allPoints = [...points, ...extraToolPoints];
       let minX = Math.min(...allPoints.map(p => p.x));
@@ -667,7 +711,7 @@
       return machineViewport(points, width, height, bendX, bendY, minToolHeight).points;
     }
 
-    function cardSvg(step, bendIndex, segments, folded, evalInfo) {
+    function cardSvg(step, bendNo, bendIndex, segments, folded, evalInfo) {
       const width = 520;
       const height = 300;
       const toolX = 260;
@@ -697,7 +741,7 @@
       return `
         <svg viewBox="0 0 ${width} ${height}">
           <rect x="0" y="0" width="${width}" height="${height}" fill="#fff"></rect>
-          <text x="18" y="32" font-size="18" font-weight="900">步驟 ${step}：第${step}折　${tool.type} / ${tool.code}</text>
+          <text x="18" y="32" font-size="18" font-weight="900">步驟 ${step}：第${bendNo}折　${tool.type} / ${tool.code}</text>
           <text x="18" y="66" font-size="15" fill="#647280">短邊 ${evalInfo.minEdge} mm｜<tspan class="${ok ? "ok" : "bad"}">${evalInfo.result}</tspan></text>
           <text x="${toolX + 16}" y="60" font-size="14" font-weight="900" fill="var(--knife)">T100${step}</text>
           ${tool.type === "彎刀"
@@ -734,6 +778,7 @@
       const allFolded = new Set(bendIndexes.map(item => item.i));
       const minEdgeValue = Math.max(8, n(thickness.value) * 6);
       const total = segments.reduce((sum, seg) => sum + seg.length, 0);
+      const thick = n(thickness.value);
 
       document.querySelector("#total").textContent = `${total} mm`;
       document.querySelector("#bendCount").textContent = bendIndexes.length;
@@ -741,13 +786,32 @@
       drawFinal(segments, allFolded);
 
       cards.innerHTML = "";
-      const folded = new Set();
-      bendIndexes.forEach((item, i) => {
-        folded.add(item.i);
-        const evalInfo = evaluateStep(segments, folded, item.i, n(thickness.value), i);
+      const originalOrder = bendIndexes.map(item => item.i);
+      let stepData = evaluateOrder(segments, originalOrder, thick);
+      const hasCannotMake = stepData.some(item => !item.evalInfo.ok);
+      const suggestedOrder = hasCannotMake ? findSuggestedOrder(segments, bendIndexes, thick) : null;
+      if (suggestedOrder) {
+        stepData = evaluateOrder(segments, suggestedOrder, thick);
+      }
+
+      if (suggestedOrder) {
+        const notice = document.createElement("div");
+        notice.style.gridColumn = "1 / -1";
+        notice.style.padding = "10px 12px";
+        notice.style.border = "1px solid #c9e1ea";
+        notice.style.borderRadius = "8px";
+        notice.style.background = "#eef7fa";
+        notice.style.color = "#176b87";
+        notice.style.fontWeight = "900";
+        notice.textContent = `原順序會卡刀，已依 Excel 邏輯改用建議順序：${suggestedOrder.map(index => bendNoForIndex(bendIndexes, index)).join("→")}`;
+        cards.appendChild(notice);
+      }
+
+      stepData.forEach((item, i) => {
+        const bendNo = bendNoForIndex(bendIndexes, item.bendIndex);
         const article = document.createElement("article");
         article.className = "card";
-        article.innerHTML = `<h3>第 ${i + 1} 折刀具步驟圖</h3>${cardSvg(i + 1, item.i, segments, folded, evalInfo)}`;
+        article.innerHTML = `<h3>第 ${i + 1} 折刀具步驟圖</h3>${cardSvg(i + 1, bendNo, item.bendIndex, segments, item.folded, item.evalInfo)}`;
         cards.appendChild(article);
       });
     }
