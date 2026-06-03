@@ -1,44 +1,746 @@
 <!doctype html>
 <html lang="zh-Hant-TW">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>製程良率、WIP 與人力效率分析工具</title>
-<style>
-:root{--bg:#f4f6f3;--panel:#fff;--text:#17211d;--muted:#64736c;--line:#d8e2dc;--accent:#17745a;--blue:#215f9a;--warn:#a96008;--bad:#b42318;--shadow:0 18px 44px rgba(30,48,40,.11)}*{box-sizing:border-box}body{margin:0;min-height:100vh;color:var(--text);font-family:"Microsoft JhengHei","Noto Sans TC",system-ui,sans-serif;background:linear-gradient(135deg,rgba(23,116,90,.13),transparent 34%),linear-gradient(315deg,rgba(33,95,154,.12),transparent 32%),var(--bg)}main{width:min(1180px,calc(100% - 32px));margin:0 auto;padding:28px 0 40px}header{display:grid;grid-template-columns:1fr auto;gap:16px;align-items:end;margin-bottom:18px}h1{margin:0 0 8px;font-size:clamp(27px,5vw,42px);line-height:1.16}p{margin:0;color:var(--muted);line-height:1.7}.tag{min-height:38px;display:inline-flex;align-items:center;justify-content:center;padding:8px 12px;border:1px solid var(--line);border-radius:8px;background:rgba(255,255,255,.72);color:var(--blue);font-weight:800;white-space:nowrap}.layout{display:grid;grid-template-columns:minmax(0,1fr) minmax(360px,.95fr);gap:16px;align-items:start}.panel{background:var(--panel);border:1px solid var(--line);border-radius:8px;box-shadow:var(--shadow)}.panel h2{margin:0;padding:16px 18px 0;font-size:20px}.inputs{padding:16px 18px 18px;display:grid;grid-template-columns:1fr 1fr;gap:12px}.group-title{grid-column:1/-1;padding-top:6px;color:var(--blue);font-weight:900;border-top:1px solid var(--line)}.group-title:first-child{border-top:0;padding-top:0}label{display:grid;gap:6px;font-weight:800}.hint{color:var(--muted);font-size:13px;font-weight:400}input{width:100%;min-height:43px;border:1px solid #cbd8d1;border-radius:8px;padding:8px 10px;color:var(--text);font:inherit;background:#fff}input:focus{outline:3px solid rgba(23,116,90,.18);border-color:var(--accent)}.buttons{display:flex;flex-wrap:wrap;gap:10px;padding:0 18px 18px}button{min-height:42px;border:1px solid transparent;border-radius:8px;padding:9px 14px;font:inherit;font-weight:800;cursor:pointer}.primary{color:#fff;background:var(--accent)}.secondary{color:var(--blue);background:#eef5fb;border-color:#caddeb}.results{padding:18px;display:grid;gap:12px}.metric-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.metric{padding:14px;border:1px solid var(--line);border-radius:8px;background:#fbfdfc}.metric span{display:block;color:var(--muted);font-size:13px;margin-bottom:5px}.metric strong{font-size:26px;line-height:1.1}.metric.good strong{color:var(--accent)}.metric.warn strong{color:var(--warn)}.metric.bad strong{color:var(--bad)}.advice{padding:14px;border-radius:8px;border:1px solid #c9ded4;background:#edf8f3;line-height:1.7}.formula{padding:14px;border-radius:8px;background:#f7f8fa;border:1px solid var(--line);color:var(--muted);line-height:1.7}footer{margin-top:18px;color:var(--muted);font-size:14px;line-height:1.7}@media(max-width:900px){header,.layout,.inputs,.metric-grid{grid-template-columns:1fr}.tag{justify-self:start}}
-</style>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>製程良率、成本與瓶頸分析儀表板</title>
+  <style>
+    :root {
+      --bg: #f4f6f8;
+      --panel: #ffffff;
+      --ink: #14212b;
+      --muted: #647484;
+      --line: #d7e0e7;
+      --soft: #f8fafc;
+      --green: #157a57;
+      --blue: #1f66a8;
+      --amber: #a35d00;
+      --red: #b42318;
+      --shadow: 0 16px 38px rgba(27, 39, 52, .1);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      color: var(--ink);
+      font-family: "Microsoft JhengHei", "Noto Sans TC", system-ui, sans-serif;
+      background:
+        linear-gradient(135deg, rgba(31, 102, 168, .1), transparent 34%),
+        linear-gradient(315deg, rgba(21, 122, 87, .12), transparent 34%),
+        var(--bg);
+    }
+
+    main {
+      width: min(1380px, calc(100% - 28px));
+      margin: 0 auto;
+      padding: 24px 0 36px;
+    }
+
+    header {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 16px;
+      align-items: end;
+      margin-bottom: 14px;
+    }
+
+    h1 {
+      margin: 0 0 6px;
+      font-size: clamp(28px, 4vw, 42px);
+      line-height: 1.14;
+    }
+
+    p {
+      margin: 0;
+      color: var(--muted);
+      line-height: 1.65;
+    }
+
+    .badge {
+      min-height: 38px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 8px 12px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: rgba(255, 255, 255, .75);
+      color: var(--blue);
+      font-weight: 900;
+      white-space: nowrap;
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: 430px minmax(0, 1fr);
+      gap: 14px;
+      align-items: start;
+    }
+
+    .panel {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+
+    .panel h2 {
+      margin: 0;
+      padding: 16px 18px 10px;
+      font-size: 20px;
+      border-bottom: 1px solid var(--line);
+      background: var(--soft);
+    }
+
+    .inputs,
+    .results {
+      padding: 14px 16px 16px;
+      display: grid;
+      gap: 12px;
+    }
+
+    .group-title {
+      margin-top: 4px;
+      color: var(--blue);
+      font-weight: 900;
+    }
+
+    .field-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    label {
+      display: grid;
+      gap: 5px;
+      font-weight: 800;
+      font-size: 14px;
+    }
+
+    .hint {
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 400;
+    }
+
+    input, select {
+      width: 100%;
+      min-height: 40px;
+      border: 1px solid #cbd8d1;
+      border-radius: 8px;
+      padding: 8px 10px;
+      color: var(--ink);
+      font: inherit;
+      background: #fff;
+    }
+
+    input:focus, select:focus {
+      outline: 3px solid rgba(31, 102, 168, .18);
+      border-color: var(--blue);
+    }
+
+    .table-wrap {
+      overflow-x: auto;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 14px;
+      background: #fff;
+    }
+
+    th, td {
+      padding: 7px;
+      border-bottom: 1px solid var(--line);
+      text-align: left;
+      vertical-align: middle;
+      white-space: nowrap;
+    }
+
+    th {
+      color: #36546b;
+      background: #f1f5f8;
+      font-size: 13px;
+    }
+
+    td input, td select {
+      min-height: 36px;
+      min-width: 78px;
+    }
+
+    td:first-child input { min-width: 96px; }
+
+    .buttons {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 9px;
+    }
+
+    button {
+      min-height: 40px;
+      border: 1px solid transparent;
+      border-radius: 8px;
+      padding: 8px 12px;
+      font: inherit;
+      font-weight: 900;
+      cursor: pointer;
+    }
+
+    .primary { color: #fff; background: var(--green); }
+    .secondary { color: var(--blue); background: #eef5fb; border-color: #caddeb; }
+    .danger { color: var(--red); background: #fff5f4; border-color: #f0c7c2; }
+
+    .kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    .kpi {
+      min-height: 104px;
+      padding: 13px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #fbfdfc;
+      display: grid;
+      align-content: start;
+      gap: 5px;
+    }
+
+    .kpi span {
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 800;
+    }
+
+    .kpi strong {
+      font-size: 24px;
+      line-height: 1.12;
+      overflow-wrap: anywhere;
+    }
+
+    .kpi small { color: var(--muted); line-height: 1.4; }
+    .good strong { color: var(--green); }
+    .warn strong { color: var(--amber); }
+    .bad strong { color: var(--red); }
+    .info strong { color: var(--blue); }
+
+    .charts {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    .chart-box {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      overflow: hidden;
+      background: #fff;
+    }
+
+    .chart-box h3 {
+      margin: 0;
+      padding: 12px 14px;
+      font-size: 17px;
+      background: var(--soft);
+      border-bottom: 1px solid var(--line);
+    }
+
+    svg {
+      width: 100%;
+      height: auto;
+      display: block;
+      background:
+        linear-gradient(#edf2f6 1px, transparent 1px),
+        linear-gradient(90deg, #edf2f6 1px, transparent 1px);
+      background-size: 24px 24px;
+    }
+
+    .insights {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    .note {
+      padding: 14px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #fff;
+      line-height: 1.65;
+    }
+
+    .note h3 {
+      margin: 0 0 8px;
+      font-size: 17px;
+    }
+
+    .priority-list {
+      display: grid;
+      gap: 8px;
+    }
+
+    .priority {
+      border-left: 5px solid var(--blue);
+      padding: 10px 12px;
+      background: #f7fbff;
+      border-radius: 6px;
+    }
+
+    .priority strong { display: block; margin-bottom: 3px; }
+    .red { color: var(--red); }
+    .green { color: var(--green); }
+    .muted { color: var(--muted); }
+
+    footer {
+      margin-top: 14px;
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.7;
+    }
+
+    @media (max-width: 1100px) {
+      header, .layout, .charts, .insights { grid-template-columns: 1fr; }
+      .badge { justify-self: start; }
+      .kpi-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
+
+    @media (max-width: 620px) {
+      main { width: min(100% - 16px, 1380px); padding-top: 14px; }
+      .field-grid, .kpi-grid { grid-template-columns: 1fr; }
+      .panel h2 { font-size: 18px; }
+    }
+  </style>
 </head>
 <body>
 <main>
-<header><div><h1>製程良率、WIP 與人力效率分析工具</h1><p>輸入生產、品質、WIP 與人員工時資料，快速估算良率、不良成本、在製品壓力與人力產出效率。</p></div><div class="tag">品質與現場管理作品</div></header>
-<section class="layout">
-<div class="panel"><h2>現場資料輸入</h2><div class="inputs">
-<div class="group-title">品質與成本</div>
-<label>生產總數<span class="hint">本批次投入或完成數量</span><input id="totalQty" type="number" min="0" step="1" value="1000"></label>
-<label>良品數量<span class="hint">符合品質要求的數量</span><input id="goodQty" type="number" min="0" step="1" value="940"></label>
-<label>不良品數量<span class="hint">可手動填寫，或按下自動帶入</span><input id="defectQty" type="number" min="0" step="1" value="60"></label>
-<label>目標良率 %<span class="hint">例如 98 代表目標良率 98%</span><input id="targetYield" type="number" min="0" max="100" step="0.1" value="98"></label>
-<label>單件製造成本<span class="hint">每件產品的材料/加工成本</span><input id="unitCost" type="number" min="0" step="0.1" value="120"></label>
-<label>單件重工成本<span class="hint">每件不良品若重工需增加的成本</span><input id="reworkCost" type="number" min="0" step="0.1" value="35"></label>
-<div class="group-title">WIP 與人員效率</div>
-<label>WIP 在製品數<span class="hint">目前線上或站點間等待的數量</span><input id="wipQty" type="number" min="0" step="1" value="180"></label>
-<label>作業人員數<span class="hint">本製程投入人數</span><input id="peopleCount" type="number" min="0" step="1" value="8"></label>
-<label>班別工時<span class="hint">本班實際作業時數</span><input id="workHours" type="number" min="0" step="0.1" value="8"></label>
-<label>標準產能/小時<span class="hint">此製程預期每小時產出</span><input id="standardHourly" type="number" min="0" step="1" value="130"></label>
-</div><div class="buttons"><button class="primary" type="button" id="calculateBtn">分析製程</button><button class="secondary" type="button" id="autoDefectBtn">自動帶入不良數</button><button class="secondary" type="button" id="sampleBtn">套用範例</button><button class="secondary" type="button" id="resetBtn">清除</button></div></div>
-<aside class="panel results" aria-live="polite"><div class="metric-grid">
-<div class="metric good"><span>實際良率</span><strong id="yieldRate">0%</strong></div><div class="metric warn"><span>不良率</span><strong id="defectRate">0%</strong></div><div class="metric bad"><span>品質損失成本</span><strong id="lossCost">$0</strong></div><div class="metric"><span>距離目標差距</span><strong id="gapRate">0%</strong></div><div class="metric"><span>人均產出</span><strong id="outputPerPerson">0 件/人</strong></div><div class="metric"><span>人時產出</span><strong id="outputPerPersonHour">0 件/人時</strong></div><div class="metric warn"><span>WIP 可支撐時間</span><strong id="wipHours">0 小時</strong></div><div class="metric good"><span>產能達成率</span><strong id="capacityRate">0%</strong></div>
-</div><div class="advice" id="adviceText">請輸入資料後進行分析。</div><div class="formula" id="formulaText">公式：良率 = 良品數量 ÷ 生產總數 × 100%；人時產出 = 良品數量 ÷ (人數 × 工時)；WIP 可支撐時間 = WIP ÷ 每小時良品產出。</div></aside>
-</section>
-<footer>作品理念：把工業管理與品質管理常用的良率、不良率、WIP、人力效率與品質損失成本整合成簡單網頁工具，協助製造現場快速判斷改善重點。</footer>
+  <header>
+    <div>
+      <h1>製程良率、成本與瓶頸分析儀表板</h1>
+      <p>把批量、站別 CT、站別良率、WIP、OEE、不良原因與品質成本放在同一頁，快速判斷瓶頸站、產能缺口、品質損失與改善優先順序。</p>
+    </div>
+    <div class="badge">製程改善專題作品</div>
+  </header>
+
+  <section class="layout">
+    <aside class="panel">
+      <h2>輸入資料</h2>
+      <div class="inputs">
+        <div class="group-title">批量、需求與設備</div>
+        <div class="field-grid">
+          <label>投入數量<input id="inputQty" type="number" min="0" step="1" value="1200"></label>
+          <label>良品數量<input id="goodQty" type="number" min="0" step="1" value="1116"></label>
+          <label>目標良率 %<input id="targetYield" type="number" min="0" max="100" step="0.1" value="98"></label>
+          <label>客戶需求/日<input id="dailyDemand" type="number" min="0" step="1" value="1150"></label>
+          <label>班別工時<input id="shiftHours" type="number" min="0" step="0.1" value="8"></label>
+          <label>作業人員數<input id="people" type="number" min="0" step="1" value="9"></label>
+          <label>計畫開機分鐘<span class="hint">OEE Availability 分母</span><input id="plannedMinutes" type="number" min="0" step="1" value="480"></label>
+          <label>停機分鐘<input id="downtimeMinutes" type="number" min="0" step="1" value="42"></label>
+          <label>理想 CT 秒/件<span class="hint">OEE Performance 基準</span><input id="idealCt" type="number" min="0" step="0.1" value="20"></label>
+          <label>每件缺陷機會數<span class="hint">DPMO 粗估用</span><input id="opportunities" type="number" min="1" step="1" value="4"></label>
+        </div>
+
+        <div class="group-title">成本與 WIP</div>
+        <div class="field-grid">
+          <label>單件製造成本<input id="unitCost" type="number" min="0" step="0.1" value="125"></label>
+          <label>單件重工成本<input id="reworkCost" type="number" min="0" step="0.1" value="38"></label>
+          <label>報廢比例 %<input id="scrapRate" type="number" min="0" max="100" step="0.1" value="35"></label>
+          <label>目前總 WIP<input id="totalWip" type="number" min="0" step="1" value="260"></label>
+        </div>
+
+        <div class="group-title">製程站別</div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>站別</th><th>CT 秒/件</th><th>站別良率 %</th><th>WIP</th><th></th></tr></thead>
+            <tbody id="stationRows"></tbody>
+          </table>
+        </div>
+        <div class="buttons">
+          <button class="secondary" type="button" id="addStationBtn">新增站別</button>
+        </div>
+
+        <div class="group-title">不良原因</div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>原因</th><th>數量</th><th>嚴重度</th><th>處置</th><th></th></tr></thead>
+            <tbody id="defectRows"></tbody>
+          </table>
+        </div>
+        <div class="buttons">
+          <button class="secondary" type="button" id="addDefectBtn">新增不良</button>
+        </div>
+
+        <div class="buttons">
+          <button class="primary" type="button" id="analyzeBtn">分析製程</button>
+          <button class="secondary" type="button" id="sampleBtn">套用範例</button>
+          <button class="danger" type="button" id="clearBtn">清除</button>
+        </div>
+      </div>
+    </aside>
+
+    <section class="panel">
+      <h2>分析結果</h2>
+      <div class="results" aria-live="polite">
+        <div class="kpi-grid">
+          <div class="kpi good"><span>最終良率</span><strong id="yieldRate">0%</strong><small id="yieldNote">投入對良品</small></div>
+          <div class="kpi good"><span>RTY 滾動良率</span><strong id="rtyRate">0%</strong><small>站別良率連乘</small></div>
+          <div class="kpi warn"><span>瓶頸產能</span><strong id="bottleneckCapacity">0</strong><small id="bottleneckNote">-</small></div>
+          <div class="kpi bad"><span>COPQ 品質成本</span><strong id="copqCost">$0</strong><small id="copqNote">重工 + 報廢</small></div>
+          <div class="kpi info"><span>OEE 設備效率</span><strong id="oeeRate">0%</strong><small id="oeeNote">A × P × Q</small></div>
+          <div class="kpi info"><span>Takt Time</span><strong id="taktTime">0 秒</strong><small>需求節拍</small></div>
+          <div class="kpi warn"><span>產能缺口</span><strong id="capacityGap">0</strong><small>需求 - 瓶頸產能</small></div>
+          <div class="kpi info"><span>人時產出</span><strong id="pph">0</strong><small>良品 / 人時</small></div>
+          <div class="kpi warn"><span>WIP 可支撐</span><strong id="wipHours">0 小時</strong><small>以瓶頸產能估算</small></div>
+          <div class="kpi bad"><span>DPMO</span><strong id="dpmo">0</strong><small id="sigmaNote">缺陷機會指標</small></div>
+        </div>
+
+        <div class="charts">
+          <div class="chart-box">
+            <h3>站別瓶頸與 WIP</h3>
+            <svg id="stationChart" viewBox="0 0 720 330" role="img" aria-label="站別瓶頸圖"></svg>
+          </div>
+          <div class="chart-box">
+            <h3>不良柏拉圖</h3>
+            <svg id="defectChart" viewBox="0 0 620 330" role="img" aria-label="不良柏拉圖"></svg>
+          </div>
+        </div>
+
+        <div class="insights">
+          <div class="note">
+            <h3>改善優先順序</h3>
+            <div class="priority-list" id="priorityList"></div>
+          </div>
+          <div class="note">
+            <h3>計算說明</h3>
+            <p id="summaryText">請輸入資料後按下分析製程。</p>
+            <p class="muted" id="formulaText"></p>
+          </div>
+        </div>
+      </div>
+    </section>
+  </section>
+
+  <footer>這個作品參考製造現場常用的 Lean、OEE、品質成本、柏拉圖與 Six Sigma 指標，目標是把「要先改善哪一站、哪一種不良、哪一個損失」變得更容易判斷。</footer>
 </main>
+
 <script>
-const fields={totalQty:q("#totalQty"),goodQty:q("#goodQty"),defectQty:q("#defectQty"),targetYield:q("#targetYield"),unitCost:q("#unitCost"),reworkCost:q("#reworkCost"),wipQty:q("#wipQty"),peopleCount:q("#peopleCount"),workHours:q("#workHours"),standardHourly:q("#standardHourly")};
-const out={yieldRate:q("#yieldRate"),defectRate:q("#defectRate"),lossCost:q("#lossCost"),gapRate:q("#gapRate"),outputPerPerson:q("#outputPerPerson"),outputPerPersonHour:q("#outputPerPersonHour"),wipHours:q("#wipHours"),capacityRate:q("#capacityRate"),adviceText:q("#adviceText"),formulaText:q("#formulaText")};
-function q(s){return document.querySelector(s)}function val(n){const v=Number(fields[n].value);return Number.isFinite(v)&&v>=0?v:0}function money(v){return "$"+Math.round(v).toLocaleString("zh-TW")}function pct(v){return v.toFixed(2)+"%"}function num(v,d=1){return v.toFixed(d).replace(/\.0$/,"")}
-function calculate(){const total=val("totalQty"),good=val("goodQty"),defect=val("defectQty"),target=val("targetYield"),unitCost=val("unitCost"),reworkCost=val("reworkCost"),wip=val("wipQty"),people=val("peopleCount"),hours=val("workHours"),standardHourly=val("standardHourly");if(total<=0){out.adviceText.textContent="生產總數必須大於 0，才能分析製程。";return}const yieldRate=good/total*100,defectRate=defect/total*100,lossCost=defect*(unitCost+reworkCost),gap=target-yieldRate,hourlyOutput=hours>0?good/hours:0,opp=people>0?good/people:0,opph=people>0&&hours>0?good/(people*hours):0,wipHours=hourlyOutput>0?wip/hourlyOutput:0,capacityRate=standardHourly>0?hourlyOutput/standardHourly*100:0;out.yieldRate.textContent=pct(yieldRate);out.defectRate.textContent=pct(defectRate);out.lossCost.textContent=money(lossCost);out.gapRate.textContent=gap>0?"差 "+pct(gap):"達標";out.outputPerPerson.textContent=num(opp)+" 件/人";out.outputPerPersonHour.textContent=num(opph,2)+" 件/人時";out.wipHours.textContent=num(wipHours,2)+" 小時";out.capacityRate.textContent=pct(capacityRate);const notes=[];if(yieldRate>=target)notes.push("良率已達目標，建議維持製程穩定並持續追蹤關鍵不良原因。");else if(gap<=3)notes.push("良率接近目標，可先針對前兩大不良項目做改善。");else notes.push("良率明顯低於目標，建議用柏拉圖與 5M1E 分析不良原因。");if(capacityRate<90)notes.push("產能達成率偏低，可檢查人員配置、瓶頸站與設備等待時間。");else notes.push("產能達成率接近或高於標準，可把重點放在穩定品質與降低 WIP。");if(wipHours>2)notes.push("WIP 可支撐時間偏高，代表在製品堆積可能造成等待、搬運或管理成本增加。");else notes.push("WIP 水位相對健康，可持續觀察是否有短缺或斷線風險。");out.adviceText.textContent=notes.join(" ");out.formulaText.textContent=`良率 ${good} ÷ ${total} × 100% = ${pct(yieldRate)}；人時產出 ${good} ÷ (${people} × ${hours}) = ${num(opph,2)} 件/人時；WIP 時間 ${wip} ÷ ${num(hourlyOutput,2)} = ${num(wipHours,2)} 小時；品質損失 ${defect} × (${unitCost} + ${reworkCost}) = ${money(lossCost)}。`}
-function autoDefect(){fields.defectQty.value=Math.max(0,val("totalQty")-val("goodQty"));calculate()}function sample(){fields.totalQty.value=1000;fields.goodQty.value=940;fields.defectQty.value=60;fields.targetYield.value=98;fields.unitCost.value=120;fields.reworkCost.value=35;fields.wipQty.value=180;fields.peopleCount.value=8;fields.workHours.value=8;fields.standardHourly.value=130;calculate()}function reset(){Object.values(fields).forEach(f=>f.value="");calculate()}
-q("#calculateBtn").addEventListener("click",calculate);q("#autoDefectBtn").addEventListener("click",autoDefect);q("#sampleBtn").addEventListener("click",sample);q("#resetBtn").addEventListener("click",reset);q(".inputs").addEventListener("input",calculate);calculate();
+  const stationDefaults = [
+    ["裁切", 22, 99.2, 36],
+    ["折彎", 31, 97.8, 92],
+    ["焊接", 42, 96.6, 84],
+    ["研磨", 28, 98.7, 32],
+    ["檢驗", 18, 99.5, 16]
+  ];
+
+  const defectDefaults = [
+    ["折角偏差", 34, "高", "調整治具"],
+    ["焊道氣孔", 22, "中", "檢查參數"],
+    ["刮傷", 18, "中", "搬運防護"],
+    ["尺寸超差", 10, "高", "首件確認"],
+    ["漏加工", 6, "低", "流程防呆"]
+  ];
+
+  const inputIds = [
+    "inputQty", "goodQty", "targetYield", "dailyDemand", "shiftHours", "people",
+    "plannedMinutes", "downtimeMinutes", "idealCt", "unitCost", "reworkCost",
+    "scrapRate", "totalWip", "opportunities"
+  ];
+
+  const outputIds = [
+    "yieldRate", "yieldNote", "rtyRate", "bottleneckCapacity", "bottleneckNote",
+    "copqCost", "copqNote", "oeeRate", "oeeNote", "taktTime", "capacityGap",
+    "pph", "wipHours", "dpmo", "sigmaNote", "priorityList", "summaryText",
+    "formulaText", "stationChart", "defectChart"
+  ];
+
+  const fields = Object.fromEntries(inputIds.map(id => [id, document.getElementById(id)]));
+  const output = Object.fromEntries(outputIds.map(id => [id, document.getElementById(id)]));
+
+  function num(id) {
+    const value = Number(fields[id].value);
+    return Number.isFinite(value) && value >= 0 ? value : 0;
+  }
+
+  function fmt(value, digits = 1) {
+    if (!Number.isFinite(value)) return "0";
+    return value.toFixed(digits).replace(/\.0$/, "");
+  }
+
+  function pct(value, digits = 1) {
+    return `${fmt(value, digits)}%`;
+  }
+
+  function money(value) {
+    return `$${Math.round(value).toLocaleString("zh-TW")}`;
+  }
+
+  function sigmaApprox(dpmo) {
+    if (dpmo <= 3.4) return "約 6σ";
+    if (dpmo <= 233) return "約 5σ";
+    if (dpmo <= 6210) return "約 4σ";
+    if (dpmo <= 66807) return "約 3σ";
+    if (dpmo <= 308537) return "約 2σ";
+    return "低於 2σ";
+  }
+
+  function addStation(row = ["站別", 30, 98, 20]) {
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td><input value="${row[0]}" aria-label="站別名稱"></td>
+      <td><input type="number" min="0" step="0.1" value="${row[1]}" aria-label="CT 秒"></td>
+      <td><input type="number" min="0" max="100" step="0.1" value="${row[2]}" aria-label="站別良率"></td>
+      <td><input type="number" min="0" step="1" value="${row[3]}" aria-label="WIP"></td>
+      <td><button class="danger" type="button" aria-label="刪除站別">×</button></td>`;
+    tr.querySelector("button").addEventListener("click", () => {
+      tr.remove();
+      analyze();
+    });
+    tr.addEventListener("input", analyze);
+    document.getElementById("stationRows").appendChild(tr);
+  }
+
+  function addDefect(row = ["不良原因", 10, "中", "待處理"]) {
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td><input value="${row[0]}" aria-label="不良原因"></td>
+      <td><input type="number" min="0" step="1" value="${row[1]}" aria-label="不良數量"></td>
+      <td>
+        <select aria-label="嚴重度">
+          <option ${row[2] === "高" ? "selected" : ""}>高</option>
+          <option ${row[2] === "中" ? "selected" : ""}>中</option>
+          <option ${row[2] === "低" ? "selected" : ""}>低</option>
+        </select>
+      </td>
+      <td><input value="${row[3]}" aria-label="處置"></td>
+      <td><button class="danger" type="button" aria-label="刪除不良">×</button></td>`;
+    tr.querySelector("button").addEventListener("click", () => {
+      tr.remove();
+      analyze();
+    });
+    tr.addEventListener("input", analyze);
+    document.getElementById("defectRows").appendChild(tr);
+  }
+
+  function getStations() {
+    return [...document.querySelectorAll("#stationRows tr")].map(row => {
+      const inputs = row.querySelectorAll("input");
+      return {
+        name: inputs[0].value.trim() || "未命名",
+        ct: Math.max(0, Number(inputs[1].value) || 0),
+        yield: Math.min(100, Math.max(0, Number(inputs[2].value) || 0)),
+        wip: Math.max(0, Number(inputs[3].value) || 0)
+      };
+    }).filter(station => station.ct > 0);
+  }
+
+  function getDefects() {
+    return [...document.querySelectorAll("#defectRows tr")].map(row => {
+      const inputs = row.querySelectorAll("input");
+      return {
+        name: inputs[0].value.trim() || "未命名",
+        count: Math.max(0, Number(inputs[1].value) || 0),
+        severity: row.querySelector("select").value,
+        action: inputs[2].value.trim() || "待處理"
+      };
+    }).filter(defect => defect.count > 0);
+  }
+
+  function drawStationChart(stations, bottleneck) {
+    const width = 720;
+    const height = 330;
+    const left = 70;
+    const top = 30;
+    const barW = Math.max(34, Math.min(78, (width - left - 40) / Math.max(stations.length, 1) - 18));
+    const maxCt = Math.max(1, ...stations.map(s => s.ct));
+    const maxWip = Math.max(1, ...stations.map(s => s.wip));
+    const rows = stations.map((s, i) => {
+      const x = left + i * (barW + 22);
+      const ctH = s.ct / maxCt * 170;
+      const wipH = s.wip / maxWip * 95;
+      const isBottle = bottleneck && s.name === bottleneck.name;
+      return `
+        <rect x="${x}" y="${top + 190 - ctH}" width="${barW}" height="${ctH}" fill="${isBottle ? "#b42318" : "#1f66a8"}" rx="4"></rect>
+        <rect x="${x}" y="${top + 205}" width="${barW}" height="${wipH}" fill="#157a57" opacity=".78" rx="4"></rect>
+        <text x="${x + barW / 2}" y="${top + 180 - ctH}" text-anchor="middle" font-size="14" font-weight="800">${fmt(s.ct, 0)}s</text>
+        <text x="${x + barW / 2}" y="${top + 222 + wipH}" text-anchor="middle" font-size="13">WIP ${fmt(s.wip, 0)}</text>
+        <text x="${x + barW / 2}" y="316" text-anchor="middle" font-size="13">${s.name}</text>`;
+    }).join("");
+    output.stationChart.innerHTML = `
+      <line x1="${left - 15}" y1="${top + 190}" x2="${width - 20}" y2="${top + 190}" stroke="#7f8d9a"></line>
+      <text x="18" y="${top + 95}" font-size="14" fill="#1f66a8">CT</text>
+      <text x="18" y="${top + 252}" font-size="14" fill="#157a57">WIP</text>
+      ${rows || `<text x="${width / 2}" y="${height / 2}" text-anchor="middle" font-size="18">尚未輸入站別</text>`}
+      <circle cx="628" cy="30" r="7" fill="#1f66a8"></circle><text x="642" y="35" font-size="13">CT</text>
+      <circle cx="628" cy="54" r="7" fill="#157a57"></circle><text x="642" y="59" font-size="13">WIP</text>`;
+  }
+
+  function drawDefectChart(defects) {
+    const sorted = [...defects].sort((a, b) => b.count - a.count);
+    const total = sorted.reduce((sum, d) => sum + d.count, 0);
+    const width = 620;
+    const height = 330;
+    const left = 58;
+    const top = 28;
+    const max = Math.max(1, ...sorted.map(d => d.count));
+    const barW = Math.max(32, Math.min(62, (width - left - 38) / Math.max(sorted.length, 1) - 16));
+    let cumulative = 0;
+    const points = [];
+    const bars = sorted.map((d, i) => {
+      const x = left + i * (barW + 18);
+      const h = d.count / max * 188;
+      cumulative += d.count;
+      const rate = total > 0 ? cumulative / total : 0;
+      const px = x + barW / 2;
+      const py = top + 205 - rate * 188;
+      points.push(`${px},${py}`);
+      const color = d.severity === "高" ? "#b42318" : d.severity === "中" ? "#a35d00" : "#1f66a8";
+      return `
+        <rect x="${x}" y="${top + 205 - h}" width="${barW}" height="${h}" fill="${color}" rx="4"></rect>
+        <text x="${x + barW / 2}" y="${top + 195 - h}" text-anchor="middle" font-size="14" font-weight="800">${fmt(d.count, 0)}</text>
+        <text x="${x + barW / 2}" y="314" text-anchor="middle" font-size="12">${d.name.slice(0, 4)}</text>`;
+    }).join("");
+    const dot = points.map(pair => {
+      const [x, y] = pair.split(",");
+      return `<circle cx="${x}" cy="${y}" r="4" fill="#14212b"></circle>`;
+    }).join("");
+    output.defectChart.innerHTML = `
+      <line x1="${left - 15}" y1="${top + 205}" x2="${width - 20}" y2="${top + 205}" stroke="#7f8d9a"></line>
+      ${bars || `<text x="${width / 2}" y="${height / 2}" text-anchor="middle" font-size="18">尚未輸入不良原因</text>`}
+      ${points.length ? `<polyline points="${points.join(" ")}" fill="none" stroke="#14212b" stroke-width="3"></polyline>${dot}` : ""}
+      <text x="16" y="40" font-size="13">數量</text>
+      <text x="516" y="40" font-size="13">累積比</text>`;
+  }
+
+  function analyze() {
+    const inputQty = num("inputQty");
+    const goodQty = num("goodQty");
+    const defectQty = Math.max(0, inputQty - goodQty);
+    const targetYield = num("targetYield");
+    const dailyDemand = num("dailyDemand");
+    const shiftHours = num("shiftHours");
+    const people = num("people");
+    const plannedMinutes = num("plannedMinutes");
+    const downtimeMinutes = Math.min(num("downtimeMinutes"), plannedMinutes);
+    const idealCt = num("idealCt");
+    const unitCost = num("unitCost");
+    const reworkCost = num("reworkCost");
+    const scrapRate = Math.min(100, num("scrapRate"));
+    const totalWip = num("totalWip");
+    const opportunities = Math.max(1, num("opportunities"));
+    const stations = getStations();
+    const defects = getDefects();
+    const defectTotal = defects.reduce((sum, defect) => sum + defect.count, 0) || defectQty;
+    const yieldRate = inputQty > 0 ? goodQty / inputQty * 100 : 0;
+    const rty = stations.reduce((rate, station) => rate * (station.yield / 100), 1) * 100;
+    const shiftSeconds = shiftHours * 3600;
+    const takt = dailyDemand > 0 ? shiftSeconds / dailyDemand : 0;
+    const bottleneck = stations.reduce((max, station) => !max || station.ct > max.ct ? station : max, null);
+    const bottleneckCapacity = bottleneck && bottleneck.ct > 0 ? Math.floor(shiftSeconds / bottleneck.ct) : 0;
+    const capacityGap = Math.max(0, dailyDemand - bottleneckCapacity);
+    const pph = people > 0 && shiftHours > 0 ? goodQty / (people * shiftHours) : 0;
+    const hourlyBottle = bottleneck && bottleneck.ct > 0 ? 3600 / bottleneck.ct : 0;
+    const wipHours = hourlyBottle > 0 ? totalWip / hourlyBottle : 0;
+    const runtimeSeconds = Math.max(0, (plannedMinutes - downtimeMinutes) * 60);
+    const availability = plannedMinutes > 0 ? (plannedMinutes - downtimeMinutes) / plannedMinutes : 0;
+    const performance = runtimeSeconds > 0 && idealCt > 0 ? Math.min(1, idealCt * inputQty / runtimeSeconds) : 0;
+    const quality = inputQty > 0 ? goodQty / inputQty : 0;
+    const oee = availability * performance * quality * 100;
+    const scrapQty = defectQty * scrapRate / 100;
+    const reworkQty = Math.max(0, defectQty - scrapQty);
+    const copq = scrapQty * unitCost + reworkQty * reworkCost;
+    const dpmo = inputQty > 0 ? defectTotal / (inputQty * opportunities) * 1000000 : 0;
+
+    output.yieldRate.textContent = pct(yieldRate);
+    output.yieldNote.textContent = yieldRate >= targetYield ? "達到目標" : `低於目標 ${pct(targetYield - yieldRate)}`;
+    output.yieldNote.className = yieldRate >= targetYield ? "green" : "red";
+    output.rtyRate.textContent = pct(rty);
+    output.bottleneckCapacity.textContent = `${bottleneckCapacity.toLocaleString("zh-TW")} 件/日`;
+    output.bottleneckNote.textContent = bottleneck ? `瓶頸站：${bottleneck.name}，CT ${bottleneck.ct}s` : "尚未輸入站別";
+    output.copqCost.textContent = money(copq);
+    output.copqNote.textContent = `報廢 ${fmt(scrapQty, 0)} 件，重工 ${fmt(reworkQty, 0)} 件`;
+    output.oeeRate.textContent = pct(oee);
+    output.oeeNote.textContent = `A ${pct(availability * 100)} / P ${pct(performance * 100)} / Q ${pct(quality * 100)}`;
+    output.taktTime.textContent = `${fmt(takt, 1)} 秒`;
+    output.capacityGap.textContent = capacityGap > 0 ? `缺 ${capacityGap.toLocaleString("zh-TW")} 件` : "足夠";
+    output.pph.textContent = `${fmt(pph, 2)} 件`;
+    output.wipHours.textContent = `${fmt(wipHours, 2)} 小時`;
+    output.dpmo.textContent = fmt(dpmo, 0);
+    output.sigmaNote.textContent = sigmaApprox(dpmo);
+
+    drawStationChart(stations, bottleneck);
+    drawDefectChart(defects);
+
+    const topDefect = [...defects].sort((a, b) => b.count - a.count)[0];
+    const priorities = [];
+    if (yieldRate < targetYield) priorities.push(["良率改善", `目前良率 ${pct(yieldRate)} 低於目標 ${pct(targetYield)}，先確認主要不良是否集中在 ${topDefect ? topDefect.name : "前幾項原因"}。`]);
+    if (oee < 85) priorities.push(["OEE 損失", `OEE ${pct(oee)}，可拆成稼動率、性能與品質三塊看；目前停機 ${downtimeMinutes} 分鐘，先追主要停機原因。`]);
+    if (bottleneck && bottleneck.ct > takt && takt > 0) priorities.push(["瓶頸改善", `${bottleneck.name} CT ${bottleneck.ct}s 大於 takt ${fmt(takt, 1)}s，可優先做工時拆解、治具改善或人員支援。`]);
+    if (capacityGap > 0) priorities.push(["產能缺口", `瓶頸日產能約 ${bottleneckCapacity} 件，低於需求 ${dailyDemand} 件，需要縮短瓶頸 CT 或調整排程。`]);
+    if (dpmo > 50000) priorities.push(["缺陷機會", `DPMO 約 ${fmt(dpmo, 0)}，建議把缺陷機會數與檢驗項目固定，避免不同批次指標不可比較。`]);
+    if (totalWip > stations.reduce((sum, s) => sum + s.wip, 0) * 1.2 && stations.length) priorities.push(["WIP 盤點", "總 WIP 與站別 WIP 差距偏大，可能有在途、待判或帳料不一致，需要先對帳。"]);
+    if (copq > 0) priorities.push(["品質成本", `COPQ 約 ${money(copq)}，可把重工與報廢分開追蹤，避免只看良率不看成本。`]);
+    if (!priorities.length) priorities.push(["維持監控", "目前主要指標看起來穩定，可持續追蹤 OEE、RTY 與不良柏拉圖的變化。"]);
+
+    output.priorityList.innerHTML = priorities.slice(0, 5).map(item => `
+      <div class="priority"><strong>${item[0]}</strong><span>${item[1]}</span></div>`).join("");
+    output.summaryText.textContent = `本批投入 ${inputQty} 件，良品 ${goodQty} 件，不良 ${defectQty} 件。瓶頸站為 ${bottleneck ? bottleneck.name : "未設定"}，OEE ${pct(oee)}，目前估算 COPQ 為 ${money(copq)}。`;
+    output.formulaText.textContent =
+      `RTY = 各站良率連乘 = ${pct(rty)}；` +
+      `OEE = A ${pct(availability * 100)} × P ${pct(performance * 100)} × Q ${pct(quality * 100)} = ${pct(oee)}；` +
+      `Takt = ${fmt(shiftSeconds, 0)} 秒 / ${dailyDemand} = ${fmt(takt, 1)} 秒；` +
+      `DPMO = ${fmt(defectTotal, 0)} / (${inputQty} × ${opportunities}) × 1,000,000 = ${fmt(dpmo, 0)}；` +
+      `COPQ = 報廢 ${fmt(scrapQty, 0)} × ${unitCost} + 重工 ${fmt(reworkQty, 0)} × ${reworkCost} = ${money(copq)}。`;
+  }
+
+  function loadSample() {
+    Object.assign(fields.inputQty, { value: 1200 });
+    Object.assign(fields.goodQty, { value: 1116 });
+    Object.assign(fields.targetYield, { value: 98 });
+    Object.assign(fields.dailyDemand, { value: 1150 });
+    Object.assign(fields.shiftHours, { value: 8 });
+    Object.assign(fields.people, { value: 9 });
+    Object.assign(fields.plannedMinutes, { value: 480 });
+    Object.assign(fields.downtimeMinutes, { value: 42 });
+    Object.assign(fields.idealCt, { value: 20 });
+    Object.assign(fields.unitCost, { value: 125 });
+    Object.assign(fields.reworkCost, { value: 38 });
+    Object.assign(fields.scrapRate, { value: 35 });
+    Object.assign(fields.totalWip, { value: 260 });
+    Object.assign(fields.opportunities, { value: 4 });
+    document.getElementById("stationRows").innerHTML = "";
+    document.getElementById("defectRows").innerHTML = "";
+    stationDefaults.forEach(addStation);
+    defectDefaults.forEach(addDefect);
+    analyze();
+  }
+
+  function clearAll() {
+    inputIds.forEach(id => fields[id].value = id === "opportunities" ? 1 : 0);
+    document.getElementById("stationRows").innerHTML = "";
+    document.getElementById("defectRows").innerHTML = "";
+    analyze();
+  }
+
+  document.getElementById("addStationBtn").addEventListener("click", () => {
+    addStation();
+    analyze();
+  });
+  document.getElementById("addDefectBtn").addEventListener("click", () => {
+    addDefect();
+    analyze();
+  });
+  document.getElementById("analyzeBtn").addEventListener("click", analyze);
+  document.getElementById("sampleBtn").addEventListener("click", loadSample);
+  document.getElementById("clearBtn").addEventListener("click", clearAll);
+  inputIds.forEach(id => fields[id].addEventListener("input", analyze));
+  loadSample();
 </script>
 </body>
 </html>
